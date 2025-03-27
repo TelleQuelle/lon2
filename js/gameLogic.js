@@ -412,26 +412,42 @@ function selectDie(dieElement, index) {
         return;
     }
     
-    // Если уже выбран кубик, игнорируем повторные клики
-    if (gameState.selectedDie !== null) {
+    // Получаем значение кубика
+    const dieValue = gameState.currentDice[index].value;
+    
+    // Снимаем выделение со всех кубиков сначала
+    const diceElements = document.querySelectorAll('.die');
+    diceElements.forEach(die => {
+        die.classList.remove('selected');
+        die.classList.remove('disabled');
+    });
+    
+    // Если уже выбран этот кубик, снимаем выбор
+    if (gameState.selectedDie === dieValue) {
+        gameState.selectedDie = null;
+        
+        // Скрываем информацию о валидных комбинациях
+        document.getElementById('selected-die-value').textContent = '';
+        document.getElementById('valid-combinations').classList.remove('visible');
+        document.getElementById('valid-combinations').textContent = '';
+        
+        // Снимаем выделение с карт
+        const cardElements = document.querySelectorAll('.card');
+        cardElements.forEach(cardElement => {
+            cardElement.classList.remove('valid');
+            cardElement.classList.remove('invalid');
+        });
+        
+        // Отключаем кнопки
+        document.getElementById('end-turn-btn').disabled = true;
+        document.getElementById('draw-card-btn').disabled = true;
+        
         return;
     }
     
-    // Получаем значение кубика
-    const dieValue = gameState.currentDice[index];
-    
     // Отмечаем выбранный кубик
     gameState.selectedDie = dieValue;
-    
-    // Обновляем визуально
-    const diceElements = document.querySelectorAll('.die');
-    diceElements.forEach((die, i) => {
-        if (i === index) {
-            die.classList.add('selected');
-        } else {
-            die.classList.add('disabled');
-        }
-    });
+    dieElement.classList.add('selected');
     
     // Показываем валидные комбинации
     document.getElementById('selected-die-value').textContent = dieValue;
@@ -443,21 +459,34 @@ function selectDie(dieElement, index) {
     // Отображаем информацию о валидных комбинациях
     document.getElementById('valid-combinations').textContent = 
         `Valid cards: ${validCards.join(', ')} (${pointsPerCard} points each)`;
+    document.getElementById('valid-combinations').classList.add('visible');
     
     // Отмечаем валидные карты
     const cardElements = document.querySelectorAll('.card');
     cardElements.forEach((cardElement, i) => {
         const cardValue = cardElement.getAttribute('data-value');
+        const cardEffect = cardElement.getAttribute('data-effect');
         
-        if (validCards.includes(cardValue)) {
+        // Проверяем как обычные карты, так и карты с эффектом wildcard
+        if (validCards.includes(cardValue) || cardEffect === 'wildcard') {
             cardElement.classList.add('valid');
         } else {
             cardElement.classList.add('invalid');
         }
     });
     
-    // Включаем кнопки
+    // Включаем кнопку завершения хода
     document.getElementById('end-turn-btn').disabled = false;
+    
+    // Проверяем, есть ли валидные комбинации
+    if (!checkValidCombinations()) {
+        showGameMessage("No valid combinations available! Turn will end automatically.", "warning");
+        
+        // Задержка перед автоматическим завершением хода
+        setTimeout(() => {
+            endTurnWithoutPoints();
+        }, 2000);
+    }
 }
 
 // Функция выбора карты с учетом эффектов
@@ -819,4 +848,188 @@ function updateGameUI() {
     
     // Обновляем номер текущего хода
     document.getElementById('current-turn').textContent = gameState.currentTurn;
+}
+
+// Проверка наличия валидных комбинаций
+function checkValidCombinations() {
+    // Если не выбран кубик, не проверяем
+    if (gameState.selectedDie === null) return true;
+    
+    // Получаем валидные карты для выбранного кубика
+    const dieValue = gameState.selectedDie;
+    const validCards = gameSettings.diceCombinations[dieValue].cards;
+    
+    // Проверяем, есть ли хотя бы одна валидная карта
+    for (const card of gameState.currentCards) {
+        // Проверяем и специальные эффекты (wildcard)
+        if (validCards.includes(card.value) || card.effect === 'wildcard') {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Функция для отображения всех комбинаций и множителей
+function showAllCombinations() {
+    // Создаем модальное окно
+    const modal = document.createElement('div');
+    modal.className = 'modal-content';
+    modal.id = 'combinations-modal';
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.zIndex = '2000';
+    modal.style.maxWidth = '80%';
+    modal.style.maxHeight = '80%';
+    modal.style.overflow = 'auto';
+    
+    // Создаем содержимое
+    let content = `
+        <h3>Dice Combinations</h3>
+        <table class="combinations-table">
+            <thead>
+                <tr>
+                    <th>Die</th>
+                    <th>Valid Cards</th>
+                    <th>Points per Card</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    // Добавляем информацию о комбинациях кубиков
+    for (const [die, combo] of Object.entries(gameSettings.diceCombinations)) {
+        content += `
+            <tr>
+                <td>${die}</td>
+                <td>${combo.cards.join(', ')}</td>
+                <td>${combo.points}</td>
+            </tr>
+        `;
+    }
+    
+    content += `
+            </tbody>
+        </table>
+        
+        <h3>Multipliers</h3>
+        <table class="combinations-table">
+            <thead>
+                <tr>
+                    <th>Condition</th>
+                    <th>Multiplier</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Each Ace (A)</td>
+                    <td>×${gameSettings.multipliers.aces}</td>
+                </tr>
+                <tr>
+                    <td>2 cards of same suit</td>
+                    <td>×${gameSettings.multipliers.sameSuit[2]}</td>
+                </tr>
+                <tr>
+                    <td>3 cards of same suit</td>
+                    <td>×${gameSettings.multipliers.sameSuit[3]}</td>
+                </tr>
+                <tr>
+                    <td>4+ cards of same suit</td>
+                    <td>×${gameSettings.multipliers.sameSuit[4]}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <button id="close-combinations-btn" class="action-btn">Close</button>
+    `;
+    
+    modal.innerHTML = content;
+    
+    // Добавляем стили
+    const style = document.createElement('style');
+    style.textContent = `
+        .combinations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .combinations-table th, .combinations-table td {
+            border: 1px solid #4a3a2a;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .combinations-table th {
+            background-color: #3a3a3a;
+            color: #b89d6e;
+        }
+        
+        .combinations-table tr:nth-child(even) {
+            background-color: #333333;
+        }
+        
+        #close-combinations-btn {
+            display: block;
+            margin: 20px auto 10px;
+        }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // Добавляем модальное окно в документ
+    document.body.appendChild(modal);
+    
+    // Добавляем обработчик для кнопки закрытия
+    document.getElementById('close-combinations-btn').addEventListener('click', () => {
+        modal.remove();
+    });
+}
+
+// Функция для показа уведомления о подтверждении
+function showConfirmationDialog(message, onConfirm, onCancel) {
+    // Создаем модальное окно
+    const modal = document.createElement('div');
+    modal.className = 'modal-content';
+    modal.id = 'confirmation-modal';
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.zIndex = '2000';
+    modal.style.maxWidth = '400px';
+    
+    // Создаем содержимое
+    modal.innerHTML = `
+        <h3>Confirmation</h3>
+        <p>${message}</p>
+        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+            <button id="confirm-yes-btn" class="action-btn">Yes</button>
+            <button id="confirm-no-btn" class="action-btn">No</button>
+        </div>
+    `;
+    
+    // Добавляем модальное окно в документ
+    document.body.appendChild(modal);
+    
+    // Добавляем обработчики для кнопок
+    document.getElementById('confirm-yes-btn').addEventListener('click', () => {
+        modal.remove();
+        if (onConfirm) onConfirm();
+    });
+    
+    document.getElementById('confirm-no-btn').addEventListener('click', () => {
+        modal.remove();
+        if (onCancel) onCancel();
+    });
+}
+
+// Функция для возврата из игры в меню уровня с подтверждением
+function leaveGame() {
+    // Показываем диалог подтверждения
+    showConfirmationDialog(
+        "Are you sure you want to leave the game? Your progress will be lost.",
+        () => {
+            // Если подтверждено, возвращаемся в меню уровня
+            showScreen('level-container');
+        }
+    );
 }

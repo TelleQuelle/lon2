@@ -1138,6 +1138,111 @@ function setupItemForm() {
     const uploadTrigger = document.getElementById('upload-trigger');
     const fileNameSpan = document.getElementById('file-name');
     
+    // Добавляем поле для партнерских предметов
+    const partnerSection = document.createElement('div');
+    partnerSection.className = 'form-group partner-field';
+    partnerSection.style.display = 'none';
+    partnerSection.innerHTML = `
+        <label for="is-partner-item">Partner Item:</label>
+        <select id="is-partner-item" class="form-control">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+        </select>
+        
+        <div id="partner-details" style="display: none;">
+            <div class="form-group">
+                <label for="partner-name">Partner Name:</label>
+                <input type="text" id="partner-name" class="form-control" placeholder="Partner Name">
+            </div>
+            
+            <div class="form-group">
+                <label for="partner-logo">Partner Logo URL:</label>
+                <input type="text" id="partner-logo" class="form-control" placeholder="assets/partners/logo.png">
+            </div>
+            
+            <div class="form-group">
+                <label for="partner-twitter">Twitter URL:</label>
+                <input type="text" id="partner-twitter" class="form-control" placeholder="https://twitter.com/partner">
+            </div>
+            
+            <div class="form-group">
+                <label for="partner-discord">Discord URL:</label>
+                <input type="text" id="partner-discord" class="form-control" placeholder="https://discord.gg/partner">
+            </div>
+            
+            <div class="form-group">
+                <label>Upload Partner Logo:</label>
+                <div class="file-upload-container">
+                    <input type="file" id="partner-logo-upload" class="file-upload" accept="image/*">
+                    <button type="button" id="partner-logo-trigger" class="upload-btn">Choose File</button>
+                    <span id="partner-logo-name">No file chosen</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Добавляем поле для значения карты
+    const cardValueSection = document.createElement('div');
+    cardValueSection.className = 'form-group card-value-field';
+    cardValueSection.style.display = 'none';
+    cardValueSection.innerHTML = `
+        <label for="card-value">Card Value:</label>
+        <select id="card-value" class="form-control">
+            <option value="A">Ace (A)</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="J">Jack (J)</option>
+            <option value="Q">Queen (Q)</option>
+            <option value="K">King (K)</option>
+        </select>
+        <p class="form-hint">For card skins and special cards, you need to specify the value.</p>
+    `;
+    
+    // Добавляем подсказку о форматах изображений для карт и кубиков
+    const imageHintSection = document.createElement('div');
+    imageHintSection.className = 'form-group image-hint-field';
+    imageHintSection.innerHTML = `
+        <div class="hint-box">
+            <h4>Image Path Format:</h4>
+            <p class="card-format-hint" style="display: none;">
+                For cards, use placeholders in image path:<br>
+                <code>{suit}</code> - will be replaced with heart, diamond, club, spade<br>
+                <code>{value}</code> - will be replaced with card value (A, 2, 3... K)<br>
+                Example: <code>assets/cards/skins/myskin_{suit}_{value}.png</code>
+            </p>
+            <p class="dice-format-hint" style="display: none;">
+                For dice, use placeholders in image path:<br>
+                <code>{value}</code> - will be replaced with dice value (1-6)<br>
+                Example: <code>assets/dice/skins/myskin_{value}.png</code><br>
+                For default dice image (without value): <code>assets/dice/skins/myskin.png</code>
+            </p>
+        </div>
+    `;
+    
+    // Добавляем новые элементы в форму
+    if (addItemForm) {
+        // Находим место для вставки
+        const effectField = document.querySelector('.effect-field');
+        if (effectField) {
+            // Вставляем после поля эффекта
+            effectField.parentNode.insertBefore(cardValueSection, effectField.nextSibling);
+            effectField.parentNode.insertBefore(partnerSection, cardValueSection.nextSibling);
+            
+            // Вставляем подсказку после поля изображения
+            const imageField = document.querySelector('#item-image').parentNode;
+            if (imageField) {
+                imageField.parentNode.insertBefore(imageHintSection, imageField.nextSibling);
+            }
+        }
+    }
+    
     // Обработчик изменения типа предмета
     if (itemTypeSelect) {
         itemTypeSelect.addEventListener('change', () => {
@@ -1162,10 +1267,77 @@ function setupItemForm() {
             } else {
                 effectField.style.display = 'none';
             }
+            
+            // Показываем/скрываем поле значения карты
+            const cardValueField = document.querySelector('.card-value-field');
+            if (cardValueField) {
+                if (selectedType === 'card-skin' || selectedType === 'special-card') {
+                    cardValueField.style.display = 'block';
+                } else {
+                    cardValueField.style.display = 'none';
+                }
+            }
+            
+            // Показываем/скрываем поле для партнерских предметов
+            const partnerField = document.querySelector('.partner-field');
+            if (partnerField) {
+                partnerField.style.display = 'block'; // Можно для всех типов
+            }
+            
+            // Обновляем подсказки о формате изображений
+            const cardFormatHint = document.querySelector('.card-format-hint');
+            const diceFormatHint = document.querySelector('.dice-format-hint');
+            
+            if (cardFormatHint && diceFormatHint) {
+                if (selectedType === 'card-skin' || selectedType === 'special-card') {
+                    cardFormatHint.style.display = 'block';
+                    diceFormatHint.style.display = 'none';
+                } else {
+                    cardFormatHint.style.display = 'none';
+                    diceFormatHint.style.display = 'block';
+                }
+            }
         });
         
         // Инициируем событие изменения
         itemTypeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Обработчик для переключения отображения деталей партнера
+    const isPartnerItem = document.getElementById('is-partner-item');
+    const partnerDetails = document.getElementById('partner-details');
+    
+    if (isPartnerItem && partnerDetails) {
+        isPartnerItem.addEventListener('change', () => {
+            if (isPartnerItem.value === 'true') {
+                partnerDetails.style.display = 'block';
+            } else {
+                partnerDetails.style.display = 'none';
+            }
+        });
+    }
+    
+    // Обработчик загрузки лого партнера
+    const partnerLogoUpload = document.getElementById('partner-logo-upload');
+    const partnerLogoTrigger = document.getElementById('partner-logo-trigger');
+    const partnerLogoName = document.getElementById('partner-logo-name');
+    
+    if (partnerLogoUpload && partnerLogoTrigger && partnerLogoName) {
+        partnerLogoTrigger.addEventListener('click', () => {
+            partnerLogoUpload.click();
+        });
+        
+        partnerLogoUpload.addEventListener('change', () => {
+            if (partnerLogoUpload.files.length > 0) {
+                const fileName = partnerLogoUpload.files[0].name;
+                partnerLogoName.textContent = fileName;
+                
+                // Загружаем изображение и обновляем путь
+                uploadPartnerLogo(partnerLogoUpload.files[0]);
+            } else {
+                partnerLogoName.textContent = 'No file chosen';
+            }
+        });
     }
     
     // Обработчик предварительного просмотра
@@ -1203,8 +1375,38 @@ function setupItemForm() {
         });
     }
     
-    // Настраиваем другие обработчики событий
-    setupAdminActions();
+    // Добавляем стили для подсказки
+    const style = document.createElement('style');
+    style.textContent = `
+        .hint-box {
+            background-color: #3a3a3a;
+            border: 1px solid #4a3a2a;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .hint-box h4 {
+            color: #b89d6e;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .hint-box p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .hint-box code {
+            background-color: #2b2b2b;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #d4c2a7;
+        }
+    `;
+    
+    document.head.appendChild(style);
 }
 
 // Функция для настройки загрузки файлов
@@ -1508,29 +1710,6 @@ function setupAdminActions() {
     }
 }
 
-// Функция получения опций эффектов в зависимости от типа
-function getEffectOptionsForType(type) {
-    if (type === 'special-card') {
-        return [
-            { value: 'pointsMultiplier', text: 'Points Multiplier (1.5x)' },
-            { value: 'wildcard', text: 'Wildcard (Works with any die)' },
-            { value: 'extraTurn', text: 'Extra Turn' },
-            { value: 'goldMultiplier', text: 'Gold Multiplier (1.25x)' }
-        ];
-    } else if (type === 'special-dice') {
-        return [
-            { value: 'weightedLow', text: 'Higher chance of lower numbers' },
-            { value: 'weightedHigh', text: 'Higher chance of higher numbers' },
-            { value: 'weightedEven', text: 'Higher chance of even numbers' },
-            { value: 'weightedOdd', text: 'Higher chance of odd numbers' },
-            { value: 'pointsMultiplier', text: 'Points Multiplier (1.5x)' },
-            { value: 'extraTurn', text: 'Extra Turn' }
-        ];
-    }
-    
-    return null;
-}
-
 // Функция для сброса магазина к значениям по умолчанию
 function resetShop() {
     // Запрашиваем подтверждение
@@ -1707,6 +1886,16 @@ function previewItem() {
     const effect = document.getElementById('item-effect')?.value;
     const imagePath = document.getElementById('item-image').value;
     
+    // Для карт получаем значение
+    const cardValue = document.getElementById('card-value')?.value;
+    
+    // Для партнерских предметов
+    const isPartnerItem = document.getElementById('is-partner-item')?.value === 'true';
+    const partnerName = document.getElementById('partner-name')?.value;
+    const partnerLogo = document.getElementById('partner-logo')?.value;
+    const partnerTwitter = document.getElementById('partner-twitter')?.value;
+    const partnerDiscord = document.getElementById('partner-discord')?.value;
+    
     // Проверяем, что есть минимально необходимые данные
     if (!name || !imagePath) {
         showGameMessage("Please fill in at least the name and image path", "warning");
@@ -1722,6 +1911,11 @@ function previewItem() {
         description,
         image: imagePath
     };
+    
+    // Для карт добавляем значение
+    if ((type === 'card-skin' || type === 'special-card') && cardValue) {
+        item.value = cardValue;
+    }
     
     // Добавляем эффект для специальных предметов
     if ((type === 'special-card' || type === 'special-dice') && effect) {
@@ -1744,6 +1938,23 @@ function previewItem() {
             case 'weightedOdd':
                 item.weights = [25, 8.3, 25, 8.3, 25, 8.3];
                 break;
+        }
+    }
+    
+    // Добавляем информацию о партнере, если это партнерский предмет
+    if (isPartnerItem && partnerName && partnerLogo) {
+        item.partner = {
+            name: partnerName,
+            logo: partnerLogo
+        };
+        
+        // Добавляем ссылки на соцсети, если они указаны
+        if (partnerTwitter) {
+            item.partner.twitter = partnerTwitter;
+        }
+        
+        if (partnerDiscord) {
+            item.partner.discord = partnerDiscord;
         }
     }
     
@@ -2737,29 +2948,6 @@ function setupItemTypeSelect() {
     itemTypeSelect.dispatchEvent(new Event('change'));
 }
 
-// Функция для получения опций эффектов в зависимости от типа
-function getEffectOptionsForType(type) {
-    if (type === 'special-card') {
-        return [
-            { value: 'pointsMultiplier', text: 'Points Multiplier (1.5x)' },
-            { value: 'wildcard', text: 'Wildcard (Works with any die)' },
-            { value: 'extraTurn', text: 'Extra Turn' },
-            { value: 'goldMultiplier', text: 'Gold Multiplier (1.25x)' }
-        ];
-    } else if (type === 'special-dice') {
-        return [
-            { value: 'weightedLow', text: 'Higher chance of lower numbers' },
-            { value: 'weightedHigh', text: 'Higher chance of higher numbers' },
-            { value: 'weightedEven', text: 'Higher chance of even numbers' },
-            { value: 'weightedOdd', text: 'Higher chance of odd numbers' },
-            { value: 'pointsMultiplier', text: 'Points Multiplier (1.5x)' },
-            { value: 'extraTurn', text: 'Extra Turn' }
-        ];
-    }
-    
-    return null;
-}
-
 // Функция для настройки статистики в админ-панели
 function setupAdminStats() {
     // Добавляем обработчики событий
@@ -2988,78 +3176,107 @@ function giveSilverToPlayer() {
 
 // Функция для добавления нового товара
 function addNewItem(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     
-    // Получаем данные из формы
-    const type = document.getElementById('item-type').value;
-    const name = document.getElementById('item-name').value;
-    const price = parseInt(document.getElementById('item-price').value);
-    const rarity = document.getElementById('item-rarity').value;
-    const description = document.getElementById('item-description').value;
-    const effect = document.getElementById('item-effect').value || null;
-    const imagePath = document.getElementById('item-image').value;
-    
-    // Проверяем заполнение обязательных полей
-    if (!name || !price || !description || !imagePath) {
-        showGameMessage("Please fill in all required fields", "warning");
-        return;
-    }
-    
-    // Создаем объект с базовыми свойствами
-    const newItem = {
-        type: type,
-        name: name,
-        price: price,
-        rarity: rarity,
-        description: description,
-        image: imagePath
-    };
-    
-    // Добавляем дополнительные свойства в зависимости от типа
-    if (type === 'special-card' || type === 'special-dice') {
-        newItem.effect = effect;
+    // Проверяем, есть ли данные предпросмотра
+    if (!adminState.preview.visible || !adminState.preview.data) {
+        // Если нет, создаем предпросмотр
+        previewItem();
         
-        // Добавляем дополнительные параметры в зависимости от эффекта
-        switch (effect) {
-            case 'pointsMultiplier':
-                newItem.value = 1.5;
-                break;
-            case 'weightedLow':
-                newItem.weights = [30, 22.5, 17.5, 15, 10, 5];
-                break;
-            case 'weightedHigh':
-                newItem.weights = [5, 10, 15, 17.5, 22.5, 30];
-                break;
-            case 'weightedEven':
-                newItem.weights = [8.3, 25, 8.3, 25, 8.3, 25];
-                break;
-            case 'weightedOdd':
-                newItem.weights = [25, 8.3, 25, 8.3, 25, 8.3];
-                break;
+        // Если всё еще нет данных, значит есть ошибки
+        if (!adminState.preview.visible || !adminState.preview.data) {
+            return;
         }
     }
     
-    // Добавляем предмет в базу данных
-    const addPromise = type === 'card-skin' || type === 'special-card'
-        ? ContentManager.addCard(newItem)
-        : ContentManager.addDie(newItem);
+    // Получаем данные предмета
+    const item = adminState.preview.data;
     
-    addPromise.then(item => {
+    // Проверяем для карт необходимость значения
+    if ((item.type === 'card-skin' || item.type === 'special-card') && !item.value) {
+        showGameMessage("Please select a card value for this item", "warning");
+        return;
+    }
+    
+    // Добавляем предмет в соответствующую категорию
+    let addPromise;
+    
+    if (item.type === 'card-skin' || item.type === 'special-card') {
+        addPromise = ContentManager.addCard(item);
+    } else {
+        addPromise = ContentManager.addDie(item);
+    }
+    
+    // Обрабатываем результат
+    addPromise.then(newItem => {
+        // Очищаем форму
+        document.getElementById('add-item-form').reset();
+        document.getElementById('file-name').textContent = 'No file chosen';
+        
+        // Сбрасываем предпросмотр
+        adminState.preview.visible = false;
+        adminState.preview.data = null;
+        
+        // Очищаем предпросмотр
+        const previewContainer = document.querySelector('.preview-content');
+        if (previewContainer) {
+            previewContainer.innerHTML = '<p>Item preview will appear here</p>';
+        }
+        
         // Обновляем магазин
         ContentManager.updateShopFromDatabase().then(() => {
-            // Сбрасываем форму
-            document.getElementById('add-item-form').reset();
+            // Показываем сообщение об успехе
+            showGameMessage(`Item "${item.name}" added successfully!`, "success");
             
             // Обновляем статистику контента
             refreshContentStats();
             
-            // Показываем сообщение об успешном добавлении
-            showGameMessage(`New item "${name}" has been added!`, "success");
-            
-            // Вызываем событие изменения типа для обновления полей
-            document.getElementById('item-type').dispatchEvent(new Event('change'));
+            // Добавляем предмет в список недавно добавленных
+            addToRecentItems(newItem);
         });
     }).catch(error => {
-        showGameMessage("Error adding item: " + error.message, "warning");
+        console.error("Error adding item:", error);
+        showGameMessage("Failed to add item: " + error.message, "warning");
     });
+}
+
+// Функция для загрузки логотипа партнера
+function uploadPartnerLogo(file) {
+    // В реальном приложении здесь был бы код для загрузки файла на сервер
+    // В этой демонстрации мы просто обновляем путь к изображению
+    
+    const partnerLogoInput = document.getElementById('partner-logo');
+    
+    if (!partnerLogoInput) return;
+    
+    const fileName = file.name;
+    
+    // Генерируем относительный путь
+    const path = `assets/partners/${fileName}`;
+    
+    // Обновляем поле ввода
+    partnerLogoInput.value = path;
+}
+
+// Функция получения опций эффектов в зависимости от типа (обновленная)
+function getEffectOptionsForType(type) {
+    if (type === 'special-card') {
+        return [
+            { value: 'pointsMultiplier', text: 'Points Multiplier (1.5x)' },
+            { value: 'wildcard', text: 'Wildcard (Works with any die)' },
+            { value: 'extraTurn', text: 'Extra Turn' },
+            { value: 'goldMultiplier', text: 'Gold Multiplier (1.25x)' }
+        ];
+    } else if (type === 'special-dice') {
+        return [
+            { value: 'weightedLow', text: 'Higher chance of lower numbers (1-3)' },
+            { value: 'weightedHigh', text: 'Higher chance of higher numbers (4-6)' },
+            { value: 'weightedEven', text: 'Higher chance of even numbers (2, 4, 6)' },
+            { value: 'weightedOdd', text: 'Higher chance of odd numbers (1, 3, 5)' },
+            { value: 'pointsMultiplier', text: 'Points Multiplier (1.5x)' },
+            { value: 'extraTurn', text: 'Extra Turn' }
+        ];
+    }
+    
+    return null;
 }

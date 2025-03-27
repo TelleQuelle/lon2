@@ -199,6 +199,121 @@
             <button id="leave-game-btn">Leave Game</button>
             
             <div id="game-message"></div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Добавляем кнопку "View All Combinations" в score-area
+                    const scoreArea = document.querySelector('.score-area');
+                    if (scoreArea) {
+                        const viewCombinationsBtn = document.createElement('button');
+                        viewCombinationsBtn.id = 'view-combinations-btn';
+                        viewCombinationsBtn.textContent = 'View All Combinations';
+                        viewCombinationsBtn.addEventListener('click', showAllCombinations);
+                        
+                        // Добавляем кнопку после элемента valid-combinations
+                        const validCombinations = document.getElementById('valid-combinations');
+                        if (validCombinations && validCombinations.parentNode) {
+                            validCombinations.parentNode.insertBefore(viewCombinationsBtn, validCombinations.nextSibling);
+                        } else {
+                            scoreArea.appendChild(viewCombinationsBtn);
+                        }
+                    }
+                    
+                    // Добавляем overlay для экрана наград, если его нет
+                    if (!document.getElementById('rewards-overlay')) {
+                        const rewardsOverlay = document.createElement('div');
+                        rewardsOverlay.id = 'rewards-overlay';
+                        rewardsOverlay.style.display = 'none';
+                        
+                        const rewardsContainer = document.createElement('div');
+                        rewardsContainer.className = 'rewards-container';
+                        
+                        rewardsOverlay.appendChild(rewardsContainer);
+                        document.body.appendChild(rewardsOverlay);
+                    }
+                    
+                    // Создаем папки для изображений, если они не существуют
+                    const directories = [
+                        'assets/lore',
+                        'assets/cards/skins',
+                        'assets/cards/special',
+                        'assets/dice/skins',
+                        'assets/dice/special',
+                        'assets/partners',
+                        'assets/images'
+                    ];
+                    
+                    // Это условный код, поскольку в веб-среде это обычно делается на сервере
+                    console.log('Make sure these directories exist in your project:');
+                    directories.forEach(dir => console.log(' - ' + dir));
+                    
+                    // Создаем тестовые изображения для серебра и сокровищ, если они еще не существуют
+                    createDummyImage('assets/images/silver_coin.png', '#FFD700', 'S');
+                    createDummyImage('assets/images/treasure.png', '#B89D6E', 'T');
+                    createDummyImage('assets/images/scroll.png', '#D4C2A7', 'NFT');
+                });
+                
+                // Функция для создания заглушки изображения (для демонстрации)
+                function createDummyImage(path, color, text) {
+                    console.log(`Ensure image exists at: ${path}`);
+                    
+                    // В реальном приложении здесь был бы код для проверки существования изображения
+                    // и создания его, если оно не существует. В веб-среде это обычно делается на сервере.
+                }
+                </script>
+                
+                <!-- Исправим отображение валидных комбинаций в игре -->
+                <style>
+                    /* Исправление для счетчика ходов и очков */
+                    #current-turn, #max-turns, #current-score, #target-score {
+                        color: #b89d6e;
+                        font-weight: bold;
+                    }
+                    
+                    /* Улучшение отображения валидных комбинаций */
+                    #valid-combinations {
+                        display: none;
+                        max-width: 100%;
+                        overflow-x: auto;
+                        padding: 8px;
+                        margin-top: 5px;
+                        border: 1px solid #4a3a2a;
+                        border-radius: 5px;
+                        background-color: #3a3a3a;
+                    }
+                    
+                    #valid-combinations.visible {
+                        display: inline-block;
+                    }
+                    
+                    /* Стили для выбора кубика */
+                    .die {
+                        transition: transform 0.3s, border 0.3s, box-shadow 0.3s, opacity 0.3s;
+                    }
+                    
+                    .die:hover:not(.disabled) {
+                        transform: scale(1.05);
+                        border-color: #b89d6e;
+                    }
+                    
+                    /* Кнопка просмотра комбинаций */
+                    #view-combinations-btn {
+                        display: block;
+                        margin: 10px auto;
+                        background-color: #3a3a3a;
+                        color: #d4c2a7;
+                        border: 1px solid #b89d6e;
+                        padding: 8px 15px;
+                        cursor: pointer;
+                        border-radius: 5px;
+                        transition: background-color 0.3s, transform 0.2s;
+                    }
+                    
+                    #view-combinations-btn:hover {
+                        background-color: #4a4a4a;
+                        transform: scale(1.05);
+                    }
+                </style>
         </div>
 
         <!-- Экран результатов уровня -->

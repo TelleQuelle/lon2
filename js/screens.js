@@ -74,6 +74,11 @@ function updateLevelsList() {
     // Очищаем контейнер
     levelListContainer.innerHTML = '';
     
+    // Массив рун для заблокированных уровней
+    const runes = [
+        '᛫', 'ᚦ', 'ᚢ', 'ᚱ', 'ᚴ', 'ᚼ', 'ᚾ', 'ᛁ', 'ᛅ', 'ᛦ', 'ᛋ', 'ᛏ', 'ᛒ', 'ᛚ', 'ᛘ'
+    ];
+    
     // Заполняем список уровней
     gameSettings.levels.forEach(level => {
         // Определяем статус уровня
@@ -91,8 +96,14 @@ function updateLevelsList() {
         
         // Наполняем содержимым
         if (isLocked) {
+            // Создаем случайную руническую строку для названия
+            let runeString = '';
+            for (let i = 0; i < level.name.length; i++) {
+                runeString += runes[Math.floor(Math.random() * runes.length)];
+            }
+            
             levelItem.innerHTML = `
-                <span>Level ${level.id}: ??????</span>
+                <span>Level ${level.id}: ${runeString}</span>
                 <span>Locked</span>
             `;
         } else {
@@ -193,8 +204,9 @@ function showLevelLore() {
             <img src="assets/lore/level${level.id}_2.png" alt="${level.lore.chapter2.title}" class="lore-image">
             <p>${level.lore.chapter2.text[0]}</p>
             <p>${level.lore.chapter2.text[1]}</p>
-            <button id="level-lore-start" class="action-btn">Start</button>
+            <button id="level-lore-prev-2">Previous</button>
             <button id="level-lore-back-2" class="back-btn">Back to Level</button>
+            <button id="level-lore-start" class="action-btn">Start</button>
         </div>
     `;
     
@@ -202,6 +214,11 @@ function showLevelLore() {
     document.getElementById('level-lore-next-1').addEventListener('click', () => {
         document.getElementById('level-lore-step-1').style.display = 'none';
         document.getElementById('level-lore-step-2').style.display = 'block';
+    });
+    
+    document.getElementById('level-lore-prev-2').addEventListener('click', () => {
+        document.getElementById('level-lore-step-2').style.display = 'none';
+        document.getElementById('level-lore-step-1').style.display = 'block';
     });
     
     // Кнопки возврата к меню уровня
@@ -215,7 +232,8 @@ function showLevelLore() {
     
     // Кнопка начала уровня
     document.getElementById('level-lore-start').addEventListener('click', () => {
-        startLevel(); // Эта функция запускает уровень
+        showScreen('game-screen'); // Сначала меняем экран
+        startLevel(); // Потом запускаем уровень
     });
     
     // Показываем экран с лором
@@ -269,26 +287,30 @@ function initGameScreen(level) {
 
 // Функция для отображения результатов уровня
 function showLevelResults(isVictory, level, statistics) {
-    const overlay = document.getElementById('level-result');
-    const content = overlay.querySelector('.overlay-content');
-    const title = document.getElementById('result-title');
-    const message = document.getElementById('result-message');
-    const silverReward = document.getElementById('silver-reward');
-    const specialRewards = document.querySelector('#rewards-list ul');
+    // Создаем элемент оверлея, если его еще нет
+    if (!document.getElementById('rewards-overlay')) {
+        const rewardsOverlay = document.createElement('div');
+        rewardsOverlay.id = 'rewards-overlay';
+        rewardsOverlay.style.display = 'none';
+        
+        // Создаем контейнер для наград
+        const rewardsContainer = document.createElement('div');
+        rewardsContainer.className = 'rewards-container';
+        
+        rewardsOverlay.appendChild(rewardsContainer);
+        document.body.appendChild(rewardsOverlay);
+    }
+    
+    // Получаем элементы
+    const overlay = document.getElementById('rewards-overlay');
+    const container = overlay.querySelector('.rewards-container');
     
     // Настраиваем сообщение
     if (isVictory) {
-        title.textContent = "Victory!";
-        title.className = ""; // Сбрасываем классы
-        title.classList.add('victory-animation');
-        
-        message.textContent = `Congratulations! You have completed Level ${level.id}: ${level.name}!`;
-        
         // Определяем награду серебром (случайное значение в диапазоне)
         const silverAmount = Math.floor(
             Math.random() * (level.rewards.silverMax - level.rewards.silverMin + 1) + level.rewards.silverMin
         );
-        silverReward.textContent = silverAmount;
         
         // Сохраняем данные о награде для последующего клейма
         window.currentRewards = {
@@ -296,34 +318,80 @@ function showLevelResults(isVictory, level, statistics) {
             special: level.rewards.special || null
         };
         
+        // Создаем HTML для контейнера наград
+        let rewardsHTML = `
+            <div class="rewards-header">
+                <h2 class="victory-animation">Victory!</h2>
+                <p>Congratulations! You have completed Level ${level.id}: ${level.name}!</p>
+            </div>
+            
+            <img src="assets/images/treasure.png" alt="Treasure" class="rewards-image treasure-open">
+            
+            <div class="rewards-list">
+                <h3>Your Rewards:</h3>
+                <div class="reward-item">
+                    <img src="assets/images/silver_coin.png" alt="Silver" class="reward-icon">
+                    <span>${silverAmount} Silver</span>
+                </div>
+        `;
+        
         // Если есть специальные награды, добавляем их
         if (level.rewards.special) {
             if (level.rewards.special === "NFT_Scroll") {
-                const specialItem = document.createElement('li');
-                specialItem.textContent = "Freedom Scroll NFT";
-                specialRewards.appendChild(specialItem);
+                rewardsHTML += `
+                    <div class="reward-item">
+                        <img src="assets/images/scroll.png" alt="NFT Scroll" class="reward-icon">
+                        <span>Freedom Scroll NFT</span>
+                    </div>
+                `;
             }
         }
+        
+        rewardsHTML += `
+            </div>
+            
+            <button id="claim-rewards-btn">Claim Rewards</button>
+        `;
+        
+        // Обновляем содержимое контейнера
+        container.innerHTML = rewardsHTML;
+        
+        // Показываем оверлей
+        overlay.style.display = 'flex';
+        
+        // Добавляем анимацию падающих монет
+        window.utils.createFallingAnimation(overlay, 'assets/images/silver_coin.png', 20, 3000);
+        
+        // Добавляем обработчик для кнопки клейма наград
+        document.getElementById('claim-rewards-btn').addEventListener('click', () => {
+            claimRewards();
+            overlay.style.display = 'none';
+        });
     } else {
+        // В случае поражения показываем старый интерфейс
+        const oldOverlay = document.getElementById('level-result');
+        const content = oldOverlay.querySelector('.overlay-content');
+        const title = document.getElementById('result-title');
+        const message = document.getElementById('result-message');
+        
         title.textContent = "Defeat";
         title.className = ""; // Сбрасываем классы
         title.classList.add('defeat-animation');
         
         message.textContent = `You failed to complete the level. Try again!`;
-        silverReward.textContent = "0";
         
         // Сбрасываем данные о наградах
         window.currentRewards = null;
+        
+        // Показываем оверлей
+        oldOverlay.classList.add('active');
+        content.classList.add('active');
     }
     
     // Сохраняем статистику уровня
     if (statistics) {
         localStorage.setItem(`levelStats_${level.id}`, JSON.stringify(statistics));
     }
-    
-    // Показываем оверлей
-    overlay.classList.add('active');
-    content.classList.add('active');
 }
 
 // Функция для клейма наград

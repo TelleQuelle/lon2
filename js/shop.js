@@ -34,127 +34,11 @@ function loadShopItems() {
     // Создаем заголовки категорий
     createCategoryHeaders(cardSkinsContainer, diceSkinsContainer, specialCardsContainer, specialDiceContainer);
     
-    // Функция для создания группы элементов
-    function createItemGroup(container, title) {
-        const group = document.createElement('div');
-        group.className = 'shop-item-group';
-        
-        // Добавляем заголовок группы если он есть
-        if (title) {
-            const header = document.createElement('h4');
-            header.className = 'group-header';
-            header.textContent = title;
-            group.appendChild(header);
-        }
-        
-        container.appendChild(group);
-        return group;
-    }
-    
-    // Загружаем скины карт (по мастям)
-    Object.entries(shopData.cardSkins).forEach(([skinId, skinData]) => {
-        // Создаем группу для текущего скина с заголовком
-        const skinGroup = createItemGroup(cardSkinsContainer, skinData.name);
-        skinGroup.classList.add('skin-group');
-        
-        // Создаем элементы для каждой масти
-        ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
-            // Формируем ID для карты конкретной масти
-            const itemId = `${skinId}_${suit}`;
-            
-            // Проверяем, куплен ли скин для этой масти
-            const isOwned = playerData.inventory.cards.some(card => card.id === itemId);
-            
-            // Создаем элемент товара
-            const itemElement = createShopItem({
-                id: itemId,
-                name: `${getSymbolForSuit(suit)} ${getSuitName(suit)}`,
-                price: skinData.price,
-                rarity: skinData.rarity,
-                description: skinData.description,
-                image: skinData.image.replace('{suit}', suit),
-                parentId: skinId,
-                suit: suit
-            }, 'card', isOwned);
-            
-            // Добавляем в группу
-            skinGroup.appendChild(itemElement);
-        });
-    });
-    
-    // Загружаем скины кубиков
-    Object.entries(shopData.diceSkins).forEach(([skinId, skinData]) => {
-        // Проверяем, куплен ли скин
-        const isOwned = playerData.inventory.dice.some(die => die.id === skinId);
-        
-        // Создаем элемент товара
-        const itemElement = createShopItem({
-            id: skinId,
-            name: skinData.name,
-            price: skinData.price,
-            rarity: skinData.rarity,
-            description: skinData.description,
-            image: skinData.image
-        }, 'dice', isOwned);
-        
-        // Добавляем в контейнер
-        diceSkinsContainer.appendChild(itemElement);
-    });
-    
-    // Загружаем специальные карты (по мастям)
-    Object.entries(shopData.specialCards).forEach(([cardId, cardData]) => {
-        // Создаем группу для текущей специальной карты с заголовком
-        const cardGroup = createItemGroup(specialCardsContainer, cardData.name);
-        cardGroup.classList.add('special-card-group');
-        
-        // Создаем элементы для каждой масти
-        ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
-            // Формируем ID для карты конкретной масти
-            const itemId = `${cardId}_${suit}`;
-            
-            // Проверяем, куплена ли карта для этой масти
-            const isOwned = playerData.inventory.cards.some(card => card.id === itemId);
-            
-            // Создаем элемент товара
-            const itemElement = createShopItem({
-                id: itemId,
-                name: `${getSymbolForSuit(suit)} ${getSuitName(suit)}`,
-                price: cardData.price,
-                rarity: cardData.rarity,
-                description: cardData.description,
-                image: cardData.image.replace('{suit}', suit),
-                effect: cardData.effect,
-                value: cardData.value,
-                parentId: cardId,
-                suit: suit
-            }, 'special-card', isOwned);
-            
-            // Добавляем в группу
-            cardGroup.appendChild(itemElement);
-        });
-    });
-    
-    // Загружаем специальные кубики
-    Object.entries(shopData.specialDice).forEach(([diceId, diceData]) => {
-        // Проверяем, куплен ли кубик
-        const isOwned = playerData.inventory.dice.some(die => die.id === diceId);
-        
-        // Создаем элемент товара
-        const itemElement = createShopItem({
-            id: diceId,
-            name: diceData.name,
-            price: diceData.price,
-            rarity: diceData.rarity,
-            description: diceData.description,
-            image: diceData.image,
-            effect: diceData.effect,
-            weights: diceData.weights,
-            value: diceData.value
-        }, 'special-dice', isOwned);
-        
-        // Добавляем в контейнер
-        specialDiceContainer.appendChild(itemElement);
-    });
+    // Отображение товаров с группировкой по типу и значению
+    displayCardSkins(cardSkinsContainer, shopData);
+    displayDiceSkins(diceSkinsContainer, shopData);
+    displaySpecialCards(specialCardsContainer, shopData);
+    displaySpecialDice(specialDiceContainer, shopData);
 }
 
 // Функция создания заголовков категорий
@@ -214,9 +98,12 @@ function createShopItem(item, type, isOwned) {
     itemElement.setAttribute('data-id', item.id);
     itemElement.setAttribute('data-rarity', item.rarity);
     
-    // Если это карта, добавляем масть как атрибут
+    // Если это карта, добавляем масть и значение как атрибут
     if (item.suit) {
         itemElement.setAttribute('data-suit', item.suit);
+    }
+    if (item.value) {
+        itemElement.setAttribute('data-value', item.value);
     }
     
     // Определяем класс изображения
@@ -228,8 +115,8 @@ function createShopItem(item, type, isOwned) {
         suitClass = item.suit === 'hearts' || item.suit === 'diamonds' ? 'red-suit' : 'black-suit';
     }
     
-    // Создаем HTML для товара
-    itemElement.innerHTML = `
+    // Базовый HTML для товара
+    let itemHTML = `
         <img src="${item.image}" alt="${item.name}" class="shop-image ${imageClass}">
         <span class="${suitClass}">${item.name}</span>
         <p>${item.price} Silver</p>
@@ -237,14 +124,37 @@ function createShopItem(item, type, isOwned) {
         <button class="buy-btn" ${isOwned ? 'disabled' : ''}>${isOwned ? 'Owned' : 'Buy'}</button>
     `;
     
+    // Добавляем партнерскую информацию, если она есть
+    if (item.partner) {
+        itemHTML += `
+            <div class="partner-section">
+                <img src="${item.partner.logo}" alt="Partner Logo" class="partner-logo">
+                <div class="partner-socials">
+                    ${item.partner.twitter ? `<a href="${item.partner.twitter}" target="_blank"><img src="assets/images/ui/twitter.png" alt="Twitter" class="partner-social-icon"></a>` : ''}
+                    ${item.partner.discord ? `<a href="${item.partner.discord}" target="_blank"><img src="assets/images/ui/discord.png" alt="Discord" class="partner-social-icon"></a>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Устанавливаем HTML
+    itemElement.innerHTML = itemHTML;
+    
     // Добавляем обработчики событий
     const descriptionBtn = itemElement.querySelector('.description-btn');
     const buyBtn = itemElement.querySelector('.buy-btn');
     
+    // Предотвращаем повторную анимацию при покупке
+    itemElement.setAttribute('data-animated', 'false');
+    
     descriptionBtn.addEventListener('click', () => showItemDescription(item));
     
     if (!isOwned) {
-        buyBtn.addEventListener('click', () => buyItem(item, type));
+        buyBtn.addEventListener('click', () => {
+            buyItem(item, type);
+            // Помечаем, что элемент уже анимирован
+            itemElement.setAttribute('data-animated', 'true');
+        });
     }
     
     return itemElement;
@@ -577,3 +487,207 @@ function addSuitStyles() {
 
 // Вызываем инициализацию при загрузке скрипта
 initShop();
+
+// Функция для отображения скинов карт с группировкой по значению и масти
+function displayCardSkins(container, shopData) {
+    // Группировка скинов карт по значению
+    const valueGroups = {};
+    
+    // Проходим по всем скинам карт
+    Object.entries(shopData.cardSkins).forEach(([skinId, skinData]) => {
+        // Для каждого значения карты
+        ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'].forEach(value => {
+            if (!valueGroups[value]) {
+                valueGroups[value] = [];
+            }
+            
+            // Добавляем скин с этим значением
+            valueGroups[value].push({
+                id: `${skinId}_${value}`,
+                name: `${skinData.name} (${value})`,
+                originalName: skinData.name,
+                value: value,
+                price: skinData.price,
+                rarity: skinData.rarity,
+                description: skinData.description,
+                imagePath: skinData.image,
+                parentId: skinId
+            });
+        });
+    });
+    
+    // Создаем группы для каждого значения
+    Object.entries(valueGroups).forEach(([value, skins]) => {
+        // Создаем заголовок для значения
+        const valueHeader = document.createElement('h3');
+        valueHeader.textContent = getValueDisplayName(value);
+        container.appendChild(valueHeader);
+        
+        // Создаем контейнер для скинов этого значения
+        const valueContainer = document.createElement('div');
+        valueContainer.className = 'skin-group';
+        container.appendChild(valueContainer);
+        
+        // Добавляем скины
+        skins.forEach(skin => {
+            // Создаем подгруппу для скина
+            const skinGroup = document.createElement('div');
+            skinGroup.className = 'card-skin-item';
+            skinGroup.innerHTML = `<h4>${skin.originalName}</h4>`;
+            valueContainer.appendChild(skinGroup);
+            
+            // Добавляем карты по мастям
+            ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
+                // Формируем ID для карты конкретной масти
+                const itemId = `${skin.id}_${suit}`;
+                
+                // Проверяем, куплен ли скин для этой масти
+                const isOwned = playerData.inventory.cards.some(card => card.id === itemId);
+                
+                // Создаем элемент товара
+                const itemElement = createShopItem({
+                    id: itemId,
+                    name: `${getSymbolForSuit(suit)} ${getSuitName(suit)}`,
+                    price: skin.price,
+                    rarity: skin.rarity,
+                    description: skin.description,
+                    image: skin.imagePath.replace('{suit}', suit).replace('{value}', value),
+                    parentId: skin.parentId,
+                    suit: suit,
+                    value: value
+                }, 'card', isOwned);
+                
+                // Добавляем в группу
+                skinGroup.appendChild(itemElement);
+            });
+        });
+    });
+}
+
+// Функция для отображения скинов кубиков
+function displayDiceSkins(container, shopData) {
+    Object.entries(shopData.diceSkins).forEach(([skinId, skinData]) => {
+        // Проверяем, куплен ли скин
+        const isOwned = playerData.inventory.dice.some(die => die.id === skinId);
+        
+        // Собираем изображения для всех значений
+        const dieImages = {};
+        for (let i = 1; i <= 6; i++) {
+            dieImages[i] = skinData.image.replace('{value}', i);
+        }
+        
+        // Создаем элемент товара с дополнительными данными
+        const itemElement = createShopItem({
+            id: skinId,
+            name: skinData.name,
+            price: skinData.price,
+            rarity: skinData.rarity,
+            description: skinData.description,
+            image: skinData.image.replace('{value}', ''), // Общее изображение
+            images: dieImages // Изображения для каждого значения
+        }, 'dice', isOwned);
+        
+        // Добавляем в контейнер
+        container.appendChild(itemElement);
+    });
+}
+
+// Функция для отображения специальных карт
+function displaySpecialCards(container, shopData) {
+    // Подход аналогичен displayCardSkins
+    const valueGroups = {};
+    
+    Object.entries(shopData.specialCards).forEach(([cardId, cardData]) => {
+        ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'].forEach(value => {
+            if (!valueGroups[value]) {
+                valueGroups[value] = [];
+            }
+            
+            valueGroups[value].push({
+                id: `${cardId}_${value}`,
+                name: `${cardData.name} (${value})`,
+                originalName: cardData.name,
+                value: value,
+                price: cardData.price,
+                rarity: cardData.rarity,
+                description: cardData.description,
+                imagePath: cardData.image,
+                effect: cardData.effect,
+                effectValue: cardData.value,
+                parentId: cardId,
+                partner: cardData.partner
+            });
+        });
+    });
+    
+    Object.entries(valueGroups).forEach(([value, cards]) => {
+        const valueHeader = document.createElement('h3');
+        valueHeader.textContent = getValueDisplayName(value);
+        container.appendChild(valueHeader);
+        
+        const valueContainer = document.createElement('div');
+        valueContainer.className = 'special-card-group';
+        container.appendChild(valueContainer);
+        
+        cards.forEach(card => {
+            const cardGroup = document.createElement('div');
+            cardGroup.className = 'card-special-item';
+            cardGroup.innerHTML = `<h4>${card.originalName}</h4>`;
+            valueContainer.appendChild(cardGroup);
+            
+            ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
+                const itemId = `${card.id}_${suit}`;
+                const isOwned = playerData.inventory.cards.some(c => c.id === itemId);
+                
+                const itemElement = createShopItem({
+                    id: itemId,
+                    name: `${getSymbolForSuit(suit)} ${getSuitName(suit)}`,
+                    price: card.price,
+                    rarity: card.rarity,
+                    description: card.description,
+                    image: card.imagePath.replace('{suit}', suit).replace('{value}', value),
+                    effect: card.effect,
+                    value: card.effectValue,
+                    parentId: card.parentId,
+                    suit: suit,
+                    cardValue: value,
+                    partner: card.partner
+                }, 'special-card', isOwned);
+                
+                cardGroup.appendChild(itemElement);
+            });
+        });
+    });
+}
+
+// Функция для отображения специальных кубиков
+function displaySpecialDice(container, shopData) {
+    Object.entries(shopData.specialDice).forEach(([diceId, diceData]) => {
+        // Проверяем, куплен ли кубик
+        const isOwned = playerData.inventory.dice.some(die => die.id === diceId);
+        
+        // Собираем изображения для всех значений
+        const dieImages = {};
+        for (let i = 1; i <= 6; i++) {
+            dieImages[i] = diceData.image.replace('{value}', i);
+        }
+        
+        // Создаем элемент товара с дополнительными данными
+        const itemElement = createShopItem({
+            id: diceId,
+            name: diceData.name,
+            price: diceData.price,
+            rarity: diceData.rarity,
+            description: diceData.description,
+            image: diceData.image.replace('{value}', ''), // Общее изображение
+            images: dieImages, // Изображения для каждого значения
+            effect: diceData.effect,
+            weights: diceData.weights,
+            value: diceData.value,
+            partner: diceData.partner
+        }, 'special-dice', isOwned);
+        
+        // Добавляем в контейнер
+        container.appendChild(itemElement);
+    });
+}
