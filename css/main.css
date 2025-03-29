@@ -316,22 +316,6 @@ input:focus, select:focus, textarea:focus {
     background-color: #5a4a3a;
 }
 
-/* Админ-панель */
-.admin-container {
-    max-height: 80vh;
-    overflow-y: auto;
-    width: 80%;
-    max-width: 600px;
-    z-index: 1000;
-}
-
-#add-item-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-}
-
 /* Модальные окна */
 .modal-content {
     display: none;
