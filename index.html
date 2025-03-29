@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lands of Nanti</title>
+    <link rel="stylesheet" href="css/fixes.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/game.css">
     <link rel="stylesheet" href="css/animations.css">
@@ -12,6 +13,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.73.0/solanaWeb3.min.js"></script>
     <!-- Шрифт в стиле средневековья -->
     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <style>
+        /* Инлайн-стили для максимального приоритета */
+        *::before, *::after {
+            display: none !important;
+            content: none !important;
+        }
+        
+        body::before, body::after,
+        #game-container::before, #game-container::after,
+        #main-menu::before, #main-menu::after {
+            display: none !important;
+            content: none !important;
+            background: none !important;
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">
@@ -455,5 +471,50 @@
     <script src="js/admin.js"></script>
     <script src="js/main.js"></script>
     <script src="js/contentManager.js"></script>
+
+    <!-- Резервное решение для багов с отображением -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Создаем стиль, который скрывает все псевдоэлементы
+            var styleEl = document.createElement('style');
+            styleEl.textContent = `
+                *::before, *::after {
+                    display: none !important;
+                    content: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                }
+            `;
+            document.head.appendChild(styleEl);
+            
+            // Находим все квадратные элементы и скрываем их
+            setTimeout(function() {
+                var allElements = document.querySelectorAll('*');
+                
+                allElements.forEach(function(element) {
+                    // Проверяем, является ли элемент квадратом без текста
+                    var style = window.getComputedStyle(element);
+                    var isSquare = Math.abs(element.offsetWidth - element.offsetHeight) < 5;
+                    var hasNoText = !element.textContent.trim();
+                    var isNotInputOrButton = element.tagName !== 'BUTTON' && 
+                                          element.tagName !== 'INPUT' &&
+                                          !element.classList.contains('die') &&
+                                          !element.classList.contains('card') &&
+                                          !element.classList.contains('die-image') &&
+                                          !element.classList.contains('card-image');
+                    
+                    // Если похоже на нежелательный квадрат, скрываем его
+                    if (isSquare && hasNoText && isNotInputOrButton && 
+                        element.offsetWidth > 10 && element.offsetWidth < 200) {
+                        element.style.display = 'none';
+                        element.style.visibility = 'hidden';
+                        element.style.opacity = '0';
+                    }
+                });
+            }, 500); // Даем время для отрисовки элементов
+        });
+    </script>
 </body>
 </html>

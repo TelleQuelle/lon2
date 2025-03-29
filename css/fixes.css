@@ -1,0 +1,73 @@
+/**
+ * Минимальные исправления для удаления квадратов на экране
+ * Этот файл нацелен только на нежелательные псевдоэлементы и не трогает основные элементы
+ */
+
+/* Для каждого псевдоэлемента выключаем отображение и содержимое */
+.menu-container::before, .menu-container::after,
+#main-menu::before, #main-menu::after,
+.profile-container::before, .profile-container::after,
+.tutorial-container::before, .tutorial-container::after,
+.lore-container::before, .lore-container::after,
+.level-container::before, .level-container::after,
+.campaign-container::before, .campaign-container::after,
+.about-container::before, .about-container::after,
+.inventory-container::before, .inventory-container::after,
+.game-container::before, .game-container::after,
+.shop-container::before, .shop-container::after,
+.admin-container::before, .admin-container::after,
+.skin-group::before, .skin-group::after,
+.special-card-group::before, .special-card-group::after,
+.path-option::before, .path-option::after,
+.category-header::after,
+.group-header::after,
+.shop-item::before, .shop-item::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Предотвращаем отображение псевдоэлементов для группы элементов */
+[class*="container"]::before, [class*="container"]::after,
+[class*="menu"]::before, [class*="menu"]::after,
+[id*="menu"]::before, [id*="menu"]::after,
+[id*="container"]::before, [id*="container"]::after,
+.overlay::before, .overlay::after,
+.overlay-content::before, .overlay-content::after,
+.ripple-effect::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    background-image: none !important;
+}
+
+/* Принудительная установка z-index для контейнеров, чтобы они были над квадратами */
+.menu-container, .profile-container, .tutorial-container, 
+.lore-container, .level-container, .campaign-container,
+.about-container, .inventory-container, .game-container,
+.shop-container, .admin-container {
+    z-index: 100 !important;
+    position: absolute !important;
+    overflow: auto !important;
+}
+
+/* Для специфических элементов, которые могут создавать квадраты */
+#main-menu {
+    background: #2b2b2b !important;
+    background-image: none !important;
+}
+
+/* Обеспечиваем основной контейнер не имеет оффсета */
+#game-container {
+    position: relative !important;
+    overflow: visible !important;
+    background: none !important;
+}
+
+/* Исправляем анимации которые могут вызывать проблемы */
+.ripple-effect::after {
+    display: none !important;
+}
