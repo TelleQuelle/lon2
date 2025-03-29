@@ -71,3 +71,51 @@
 .ripple-effect::after {
     display: none !important;
 }
+
+.social-icons {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 15px !important;
+    margin-top: 20px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.social-icons a {
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.social-icon {
+    width: 40px !important;
+    height: 40px !important;
+    transition: transform 0.3s !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+}
+
+.social-icon:hover {
+    transform: scale(1.1) !important;
+}
+
+/* Принудительно отменяем скрытие для этих элементов */
+.social-icons *::before,
+.social-icons *::after,
+.social-icon::before,
+.social-icon::after {
+    display: initial !important;
+    content: initial !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Явное указание для показа изображений */
+img.social-icon {
+    width: 40px !important;
+    height: 40px !important;
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
