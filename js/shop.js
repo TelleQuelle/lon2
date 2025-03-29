@@ -331,13 +331,6 @@ function getShopData() {
                 rarity: "Rare",
                 description: "Elegant cards with royal patterns.",
                 image: "assets/cards/skins/royal_{suit}.png"
-            },
-            'card-skin-3': {
-                name: "Dragon Scale Cards",
-                price: 800,
-                rarity: "Epic",
-                description: "Cards crafted from mystical dragon scales.",
-                image: "assets/cards/skins/dragon_{suit}.png"
             }
         },
         diceSkins: {
@@ -354,13 +347,6 @@ function getShopData() {
                 rarity: "Rare",
                 description: "Solid stone dice with engraved numbers.",
                 image: "assets/dice/skins/stone.png"
-            },
-            'dice-skin-3': {
-                name: "Crystal Dice",
-                price: 700,
-                rarity: "Epic",
-                description: "Magical crystal dice that shimmer with power.",
-                image: "assets/dice/skins/crystal.png"
             }
         },
         specialCards: {
@@ -380,14 +366,6 @@ function getShopData() {
                 description: "Can be used with any die combination, like an Ace but without multiplier.",
                 effect: "wildcard",
                 image: "assets/cards/special/joker_{suit}.png"
-            },
-            'special-card-3': {
-                name: "Extra Turn Card",
-                price: 800,
-                rarity: "Epic",
-                description: "Gives an extra turn when successfully used in a combination.",
-                effect: "extraTurn",
-                image: "assets/cards/special/extra-turn_{suit}.png"
             }
         },
         specialDice: {
@@ -408,15 +386,6 @@ function getShopData() {
                 effect: "weightedHigh",
                 weights: [5, 10, 15, 17.5, 22.5, 30],
                 image: "assets/dice/special/high-numbers.png"
-            },
-            'special-dice-3': {
-                name: "Bonus Points Die",
-                price: 800,
-                rarity: "Epic",
-                description: "Gives 1.5x points multiplier when used in a combination.",
-                effect: "pointsMultiplier",
-                value: 1.5,
-                image: "assets/dice/special/bonus-points.png"
             }
         }
     };
