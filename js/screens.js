@@ -528,3 +528,173 @@ function leaveGame() {
         showScreen('level-container');
     }
 }
+
+// Функция для добавления новой кнопки лора
+function addAlternateLoreButton() {
+    // Находим меню уровня
+    const levelContainer = document.getElementById('level-container');
+    const originalLoreBtn = document.getElementById('level-lore-btn');
+    
+    if (levelContainer && originalLoreBtn) {
+        // Скрываем оригинальную кнопку, чтобы избежать проблем с квадратом
+        originalLoreBtn.style.display = 'none';
+        
+        // Создаем новую кнопку
+        const newLoreBtn = document.createElement('button');
+        newLoreBtn.id = 'alternate-lore-btn';
+        newLoreBtn.textContent = 'View Lore';
+        newLoreBtn.className = originalLoreBtn.className; // Сохраняем классы оригинальной кнопки
+        
+        // Вставляем новую кнопку на место старой
+        originalLoreBtn.parentNode.insertBefore(newLoreBtn, originalLoreBtn);
+        
+        // Добавляем обработчик для новой кнопки
+        newLoreBtn.addEventListener('click', showAlternateLore);
+    }
+}
+
+// Функция для отображения лора в модальном окне
+function showAlternateLore() {
+    // Получаем текущий уровень из localStorage или другого хранилища
+    const currentLevel = getCurrentLevel(); // Эту функцию нужно реализовать или заменить
+    
+    // Создаем модальное окно
+    const modal = document.createElement('div');
+    modal.id = 'alternate-lore-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '9999';
+    
+    // Создаем содержимое модального окна
+    const content = document.createElement('div');
+    content.style.backgroundColor = '#2b2b2b';
+    content.style.padding = '20px';
+    content.style.borderRadius = '10px';
+    content.style.border = '2px solid #4a3a2a';
+    content.style.maxWidth = '600px';
+    content.style.width = '90%';
+    content.style.maxHeight = '80vh';
+    content.style.overflow = 'auto';
+    content.style.position = 'relative';
+    
+    // Добавляем заголовок
+    const title = document.createElement('h2');
+    title.style.color = '#b89d6e';
+    title.style.marginBottom = '15px';
+    title.textContent = `Level ${currentLevel.number}: ${currentLevel.title} - Lore`;
+    content.appendChild(title);
+    
+    // Добавляем содержимое лора
+    if (currentLevel.lore) {
+        // Если у нас есть глава 1
+        if (currentLevel.lore.chapter1) {
+            const chapter1Title = document.createElement('h3');
+            chapter1Title.style.color = '#b89d6e';
+            chapter1Title.style.marginTop = '20px';
+            chapter1Title.textContent = currentLevel.lore.chapter1.title;
+            content.appendChild(chapter1Title);
+            
+            if (currentLevel.lore.chapter1.image) {
+                const image1 = document.createElement('img');
+                image1.src = currentLevel.lore.chapter1.image;
+                image1.style.maxWidth = '100%';
+                image1.style.borderRadius = '5px';
+                image1.style.marginBottom = '15px';
+                content.appendChild(image1);
+            }
+            
+            const text1 = document.createElement('p');
+            text1.textContent = currentLevel.lore.chapter1.text;
+            content.appendChild(text1);
+        }
+        
+        // Если у нас есть глава 2
+        if (currentLevel.lore.chapter2) {
+            const chapter2Title = document.createElement('h3');
+            chapter2Title.style.color = '#b89d6e';
+            chapter2Title.style.marginTop = '20px';
+            chapter2Title.textContent = currentLevel.lore.chapter2.title;
+            content.appendChild(chapter2Title);
+            
+            if (currentLevel.lore.chapter2.image) {
+                const image2 = document.createElement('img');
+                image2.src = currentLevel.lore.chapter2.image;
+                image2.style.maxWidth = '100%';
+                image2.style.borderRadius = '5px';
+                image2.style.marginBottom = '15px';
+                content.appendChild(image2);
+            }
+            
+            const text2 = document.createElement('p');
+            text2.textContent = currentLevel.lore.chapter2.text;
+            content.appendChild(text2);
+        }
+    } else {
+        // Если данных о лоре нет
+        const noLore = document.createElement('p');
+        noLore.textContent = "No lore available for this level yet.";
+        content.appendChild(noLore);
+    }
+    
+    // Добавляем кнопку закрытия
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.marginTop = '20px';
+    closeBtn.style.backgroundColor = '#4a3a2a';
+    closeBtn.style.color = '#d4c2a7';
+    closeBtn.style.border = '1px solid #b89d6e';
+    closeBtn.style.padding = '10px 20px';
+    closeBtn.style.borderRadius = '5px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.display = 'block';
+    closeBtn.style.margin = '20px auto 0';
+    
+    closeBtn.addEventListener('click', function() {
+        document.body.removeChild(modal);
+    });
+    
+    content.appendChild(closeBtn);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+}
+
+// Функция для получения данных текущего уровня
+// Это заглушка - вам нужно реализовать ее в соответствии с вашей логикой хранения данных
+function getCurrentLevel() {
+    // Пример данных - замените на реальные
+    return {
+        number: 1,
+        title: "Treachery",
+        lore: {
+            chapter1: {
+                title: "The First Circle",
+                image: "assets/lore/level1_1.png",
+                text: "As you descend into the first circle of the Abyss, the air grows thick with betrayal. The walls seem to whisper the tales of those who came before you, their trust shattered like glass upon stone."
+            },
+            chapter2: {
+                title: "The Game Begins",
+                image: "assets/lore/level1_2.png",
+                text: "A hunched figure emerges from the shadows, cards clutched in bony fingers. 'Welcome to Treachery,' it hisses. 'The rules are simple: win and you may ascend, lose and join us in eternal torment.'"
+            }
+        }
+    };
+}
+
+// Вызываем функцию добавления кнопки при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    addAlternateLoreButton();
+});
+
+// Также можно добавить обработчик для перезагрузки кнопки при переходе между экранами
+document.addEventListener('screenChanged', function(e) {
+    if (e.detail && e.detail.screen === 'level') {
+        setTimeout(addAlternateLoreButton, 100);
+    }
+});
