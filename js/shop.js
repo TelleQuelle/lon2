@@ -471,7 +471,7 @@ function addSuitStyles() {
 // Вызываем инициализацию при загрузке скрипта
 initShop();
 
-// Функция для отображения скинов карт с группировкой по значению и масти
+// Функция для отображения скинов карт с горизонтальной группировкой по мастям
 function displayCardSkins(container, shopData) {
     // Проверка наличия данных
     if (!container || !shopData || !shopData.cardSkins) {
@@ -535,9 +535,9 @@ function displayCardSkins(container, shopData) {
     });
     
     // Создаем группу для всех скинов
-    const skinsGroup = document.createElement('div');
-    skinsGroup.className = 'skin-group';
-    container.appendChild(skinsGroup);
+    const skinsGroupContainer = document.createElement('div');
+    skinsGroupContainer.className = 'skins-container';
+    container.appendChild(skinsGroupContainer);
     
     // Добавляем каждую группу
     Object.entries(skinGroups).forEach(([skinId, group]) => {
@@ -551,12 +551,16 @@ function displayCardSkins(container, shopData) {
         groupHeader.className = 'group-title';
         skinGroupElement.appendChild(groupHeader);
         
-        // Добавляем контейнер для элементов
-        const itemsContainer = document.createElement('div');
-        itemsContainer.className = 'skin-items';
-        skinGroupElement.appendChild(itemsContainer);
+        // Создаем горизонтальный контейнер для мастей
+        const suitsContainer = document.createElement('div');
+        suitsContainer.className = 'suits-container';
+        suitsContainer.style.display = 'flex';
+        suitsContainer.style.justifyContent = 'center';
+        suitsContainer.style.flexWrap = 'wrap';
+        suitsContainer.style.gap = '10px';
+        skinGroupElement.appendChild(suitsContainer);
         
-        // Добавляем элементы
+        // Добавляем элементы мастей горизонтально
         group.items.forEach(item => {
             // Создаем элемент для карты
             const cardElement = createShopItem({
@@ -570,12 +574,12 @@ function displayCardSkins(container, shopData) {
                 suit: item.suit
             }, 'card', item.isOwned);
             
-            // Добавляем элемент в контейнер
-            itemsContainer.appendChild(cardElement);
+            // Добавляем элемент в горизонтальный контейнер
+            suitsContainer.appendChild(cardElement);
         });
         
         // Добавляем группу в основной контейнер
-        skinsGroup.appendChild(skinGroupElement);
+        skinsGroupContainer.appendChild(skinGroupElement);
     });
 }
 
@@ -607,71 +611,128 @@ function displayDiceSkins(container, shopData) {
     });
 }
 
-// Функция для отображения специальных карт
+// Функция для отображения специальных карт с горизонтальной группировкой по мастям
 function displaySpecialCards(container, shopData) {
-    // Подход аналогичен displayCardSkins
-    const valueGroups = {};
+    // Проверка наличия данных
+    if (!container || !shopData || !shopData.specialCards) {
+        console.error("Missing container or shop data for special cards");
+        return;
+    }
     
-    Object.entries(shopData.specialCards).forEach(([cardId, cardData]) => {
-        ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'].forEach(value => {
-            if (!valueGroups[value]) {
-                valueGroups[value] = [];
+    // Очищаем контейнер перед добавлением
+    container.innerHTML = '';
+    
+    // Добавляем заголовок для специальных карт
+    const specialCardsHeader = document.createElement('div');
+    specialCardsHeader.className = 'category-header';
+    specialCardsHeader.innerHTML = '<h3>Special Cards</h3><p>Cards with unique abilities and effects</p>';
+    container.appendChild(specialCardsHeader);
+    
+    // Проверяем, есть ли специальные карты
+    const specialCards = shopData.specialCards;
+    if (!specialCards || Object.keys(specialCards).length === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.textContent = 'No special cards available in the shop.';
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '20px';
+        container.appendChild(emptyMessage);
+        return;
+    }
+    
+    // Создаем контейнер для всех специальных карт
+    const specialCardsContainer = document.createElement('div');
+    specialCardsContainer.className = 'special-cards-container';
+    container.appendChild(specialCardsContainer);
+    
+    // Проходим по всем специальным картам
+    Object.entries(specialCards).forEach(([cardId, cardData]) => {
+        // Создаем контейнер для группы
+        const cardGroupElement = document.createElement('div');
+        cardGroupElement.className = 'special-card-group';
+        
+        // Добавляем заголовок группы
+        const groupHeader = document.createElement('h4');
+        groupHeader.textContent = cardData.name;
+        groupHeader.className = 'group-title';
+        cardGroupElement.appendChild(groupHeader);
+        
+        // Добавляем описание эффекта, если есть
+        if (cardData.effect) {
+            const effectDesc = document.createElement('p');
+            effectDesc.className = 'effect-description';
+            
+            // Получаем описание эффекта
+            let effectText = '';
+            switch (cardData.effect) {
+                case 'pointsMultiplier':
+                    effectText = `Gives ${cardData.value}x points multiplier`;
+                    break;
+                case 'wildcard':
+                    effectText = 'Can be used with any die combination';
+                    break;
+                case 'extraTurn':
+                    effectText = 'Gives an extra turn when used';
+                    break;
+                case 'goldMultiplier':
+                    effectText = 'Increases silver rewards by 25%';
+                    break;
+                default:
+                    effectText = cardData.effect;
             }
             
-            valueGroups[value].push({
-                id: `${cardId}_${value}`,
-                name: `${cardData.name} (${value})`,
-                originalName: cardData.name,
-                value: value,
+            effectDesc.textContent = `Effect: ${effectText}`;
+            effectDesc.style.fontSize = '14px';
+            effectDesc.style.marginBottom = '10px';
+            effectDesc.style.fontStyle = 'italic';
+            cardGroupElement.appendChild(effectDesc);
+        }
+        
+        // Создаем горизонтальный контейнер для мастей
+        const suitsContainer = document.createElement('div');
+        suitsContainer.className = 'suits-container';
+        suitsContainer.style.display = 'flex';
+        suitsContainer.style.justifyContent = 'center';
+        suitsContainer.style.flexWrap = 'wrap';
+        suitsContainer.style.gap = '10px';
+        cardGroupElement.appendChild(suitsContainer);
+        
+        // Для каждой масти создаем отдельный элемент
+        ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
+            // Формируем ID для конкретной масти
+            const itemId = `${cardId}_${suit}`;
+            
+            // Проверяем, куплен ли этот скин
+            const isOwned = playerData.inventory.cards.some(card => 
+                card.id === itemId || (card.parentId === cardId && card.suit === suit)
+            );
+            
+            // Создаем элемент для карты
+            const cardElement = createShopItem({
+                id: itemId,
+                name: `${getSymbolForSuit(suit)} ${getSuitName(suit)}`,
                 price: cardData.price,
                 rarity: cardData.rarity,
                 description: cardData.description,
-                imagePath: cardData.image,
+                image: cardData.image.replace('{suit}', suit),
                 effect: cardData.effect,
-                effectValue: cardData.value,
+                value: cardData.value,
                 parentId: cardId,
+                suit: suit,
                 partner: cardData.partner
-            });
-        });
-    });
-    
-    Object.entries(valueGroups).forEach(([value, cards]) => {
-        const valueHeader = document.createElement('h3');
-        valueHeader.textContent = getValueDisplayName(value);
-        container.appendChild(valueHeader);
-        
-        const valueContainer = document.createElement('div');
-        valueContainer.className = 'special-card-group';
-        container.appendChild(valueContainer);
-        
-        cards.forEach(card => {
-            const cardGroup = document.createElement('div');
-            cardGroup.className = 'card-special-item';
-            cardGroup.innerHTML = `<h4>${card.originalName}</h4>`;
-            valueContainer.appendChild(cardGroup);
+            }, 'special-card', isOwned);
             
-            ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
-                const itemId = `${card.id}_${suit}`;
-                const isOwned = playerData.inventory.cards.some(c => c.id === itemId);
-                
-                const itemElement = createShopItem({
-                    id: itemId,
-                    name: `${getSymbolForSuit(suit)} ${getSuitName(suit)}`,
-                    price: card.price,
-                    rarity: card.rarity,
-                    description: card.description,
-                    image: card.imagePath.replace('{suit}', suit).replace('{value}', value),
-                    effect: card.effect,
-                    value: card.effectValue,
-                    parentId: card.parentId,
-                    suit: suit,
-                    cardValue: value,
-                    partner: card.partner
-                }, 'special-card', isOwned);
-                
-                cardGroup.appendChild(itemElement);
-            });
+            // Добавляем элемент в горизонтальный контейнер
+            suitsContainer.appendChild(cardElement);
         });
+        
+        // Добавляем группу в основной контейнер
+        specialCardsContainer.appendChild(cardGroupElement);
+        
+        // Добавляем разделитель между группами
+        const divider = document.createElement('hr');
+        divider.style.margin = '20px 0';
+        divider.style.borderTop = '1px solid #4a3a2a';
+        specialCardsContainer.appendChild(divider);
     });
 }
 

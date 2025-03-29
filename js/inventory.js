@@ -774,7 +774,7 @@ function loadCardsByView(viewMode) {
     }
 }
 
-// Функция загрузки карт по мастям
+// Функция загрузки карт по мастям с горизонтальным отображением
 function loadCardsBySuit(container) {
     // Массивы для разных мастей
     const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
@@ -806,7 +806,7 @@ function loadCardsBySuit(container) {
     });
 }
 
-// Функция загрузки карт по значениям
+// Функция загрузки карт по значениям с горизонтальным отображением
 function loadCardsByValue(container) {
     // Массивы для значений
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -819,9 +819,13 @@ function loadCardsByValue(container) {
         valueHeader.textContent = getValueDisplayName(value);
         container.appendChild(valueHeader);
         
-        // Создаем контейнер для карт этого значения
+        // Создаем горизонтальный контейнер для карт этого значения
         const valueContainer = document.createElement('div');
-        valueContainer.className = 'cards-grid';
+        valueContainer.className = 'cards-grid horizontal-cards-grid';
+        valueContainer.style.display = 'flex';
+        valueContainer.style.flexWrap = 'wrap';
+        valueContainer.style.justifyContent = 'center';
+        valueContainer.style.gap = '10px';
         container.appendChild(valueContainer);
         
         // Загружаем карты для этого значения
@@ -837,17 +841,12 @@ function loadCardsByValue(container) {
     });
 }
 
-// Функция загрузки специальных карт
+// Функция загрузки специальных карт с горизонтальным отображением мастей
 function loadSpecialCards(container) {
-    // Создаем заголовок
-    const header = document.createElement('h3');
-    header.textContent = 'Available Special Cards';
-    container.appendChild(header);
-    
-    // Создаем контейнер для карт
-    const cardsContainer = document.createElement('div');
-    cardsContainer.className = 'cards-grid';
-    container.appendChild(cardsContainer);
+    // Создаем заголовок для специальных карт
+    const specialCardsHeader = document.createElement('h3');
+    specialCardsHeader.textContent = 'Special Cards';
+    container.appendChild(specialCardsHeader);
     
     // Фильтруем специальные карты из инвентаря
     const specialCards = playerData.inventory.cards.filter(card => 
@@ -860,31 +859,74 @@ function loadSpecialCards(container) {
         emptyMessage.textContent = 'You don\'t have any special cards yet. Purchase them in the shop!';
         emptyMessage.style.textAlign = 'center';
         emptyMessage.style.padding = '20px';
-        cardsContainer.appendChild(emptyMessage);
-        return;
-    }
-    
-    // Загружаем специальные карты
-    specialCards.forEach(card => {
-        // Проверяем, не используется ли уже эта карта
-        const isUsed = Object.values(playerData.deck).some(deckCard => 
-            deckCard.id === card.id
-        );
+        container.appendChild(emptyMessage);
+    } else {
+        // Группируем специальные карты по их базовому ID (без учета масти)
+        const cardGroups = {};
         
-        // Создаем элемент карты
-        const cardElement = createSpecialCardElement(card, isUsed);
-        cardsContainer.appendChild(cardElement);
-    });
+        specialCards.forEach(card => {
+            // Извлекаем базовый ID (удаляем информацию о масти)
+            const baseId = card.parentId || card.id.split('_')[0];
+            
+            if (!cardGroups[baseId]) {
+                cardGroups[baseId] = {
+                    name: card.name.split(' (')[0], // Убираем часть с мастью из названия
+                    effect: card.effect,
+                    cards: []
+                };
+            }
+            
+            // Добавляем карту в группу
+            cardGroups[baseId].cards.push(card);
+        });
+        
+        // Отображаем каждую группу специальных карт
+        Object.values(cardGroups).forEach(group => {
+            // Создаем заголовок для группы
+            const groupHeader = document.createElement('h4');
+            groupHeader.textContent = group.name;
+            groupHeader.style.marginTop = '15px';
+            container.appendChild(groupHeader);
+            
+            // Если у карты есть эффект, показываем его
+            if (group.effect) {
+                const effectText = document.createElement('p');
+                effectText.className = 'effect-description';
+                effectText.textContent = `Effect: ${getEffectDescription(group.effect)}`;
+                effectText.style.fontSize = '14px';
+                effectText.style.marginBottom = '10px';
+                effectText.style.fontStyle = 'italic';
+                container.appendChild(effectText);
+            }
+            
+            // Создаем горизонтальный контейнер для карт
+            const cardsContainer = document.createElement('div');
+            cardsContainer.className = 'cards-grid horizontal-cards-grid';
+            cardsContainer.style.display = 'flex';
+            cardsContainer.style.flexWrap = 'wrap';
+            cardsContainer.style.justifyContent = 'center';
+            cardsContainer.style.gap = '10px';
+            container.appendChild(cardsContainer);
+            
+            // Отображаем карты
+            group.cards.forEach(card => {
+                // Проверяем, используется ли карта в колоде
+                const isUsed = Object.values(playerData.deck).some(deckCard => 
+                    deckCard.id === card.id
+                );
+                
+                // Создаем элемент специальной карты
+                const cardElement = createSpecialCardElement(card, isUsed);
+                cardsContainer.appendChild(cardElement);
+            });
+        });
+    }
     
     // Добавляем заголовок для скинов карт
     const skinsHeader = document.createElement('h3');
-    skinsHeader.textContent = 'Available Card Skins';
+    skinsHeader.textContent = 'Card Skins';
+    skinsHeader.style.marginTop = '30px';
     container.appendChild(skinsHeader);
-    
-    // Создаем контейнер для скинов
-    const skinsContainer = document.createElement('div');
-    skinsContainer.className = 'cards-grid';
-    container.appendChild(skinsContainer);
     
     // Фильтруем скины карт из инвентаря
     const cardSkins = playerData.inventory.cards.filter(card => 
@@ -897,21 +939,56 @@ function loadSpecialCards(container) {
         emptyMessage.textContent = 'You don\'t have any card skins yet. Purchase them in the shop!';
         emptyMessage.style.textAlign = 'center';
         emptyMessage.style.padding = '20px';
-        skinsContainer.appendChild(emptyMessage);
-        return;
-    }
-    
-    // Загружаем скины карт
-    cardSkins.forEach(card => {
-        // Проверяем, не используется ли уже этот скин
-        const isUsed = Object.values(playerData.deck).some(deckCard => 
-            deckCard.id === card.id
-        );
+        container.appendChild(emptyMessage);
+    } else {
+        // Группируем скины карт по их базовому ID (без учета масти)
+        const skinGroups = {};
         
-        // Создаем элемент карты
-        const cardElement = createSpecialCardElement(card, isUsed);
-        skinsContainer.appendChild(cardElement);
-    });
+        cardSkins.forEach(card => {
+            // Извлекаем базовый ID
+            const baseId = card.parentId || card.id.split('_')[0];
+            
+            if (!skinGroups[baseId]) {
+                skinGroups[baseId] = {
+                    name: card.name.split(' (')[0], // Убираем часть с мастью из названия
+                    cards: []
+                };
+            }
+            
+            // Добавляем карту в группу
+            skinGroups[baseId].cards.push(card);
+        });
+        
+        // Отображаем каждую группу скинов
+        Object.values(skinGroups).forEach(group => {
+            // Создаем заголовок для группы
+            const groupHeader = document.createElement('h4');
+            groupHeader.textContent = group.name;
+            groupHeader.style.marginTop = '15px';
+            container.appendChild(groupHeader);
+            
+            // Создаем горизонтальный контейнер для карт
+            const cardsContainer = document.createElement('div');
+            cardsContainer.className = 'cards-grid horizontal-cards-grid';
+            cardsContainer.style.display = 'flex';
+            cardsContainer.style.flexWrap = 'wrap';
+            cardsContainer.style.justifyContent = 'center';
+            cardsContainer.style.gap = '10px';
+            container.appendChild(cardsContainer);
+            
+            // Отображаем карты
+            group.cards.forEach(card => {
+                // Проверяем, используется ли скин в колоде
+                const isUsed = Object.values(playerData.deck).some(deckCard => 
+                    deckCard.id === card.id
+                );
+                
+                // Создаем элемент скина карты
+                const cardElement = createSpecialCardElement(card, isUsed);
+                cardsContainer.appendChild(cardElement);
+            });
+        });
+    }
 }
 
 // Функция создания элемента карты

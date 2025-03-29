@@ -102,10 +102,9 @@
 
 /* Элементы магазина */
 .shop-item {
-    position: relative;
-    overflow: hidden;
+    width: 120px;
     transition: all 0.3s ease;
-    margin: 8px;
+    margin: 5px;
 }
 
 .shop-item:hover {
@@ -291,3 +290,95 @@
 .shop-items .shop-item:nth-child(2) { animation-delay: 0.2s; }
 .shop-items .shop-item:nth-child(3) { animation-delay: 0.3s; }
 .shop-items .shop-item:nth-child(4) { animation-delay: 0.4s; }
+
+.suits-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.card-skin-group, .special-card-group {
+    background-color: rgba(50, 40, 30, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 25px;
+    width: 100%;
+}
+
+.group-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #b89d6e;
+    font-size: 18px;
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.group-title:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #b89d6e, transparent);
+}
+
+.effect-description {
+    text-align: center;
+    font-style: italic;
+    margin: 5px 0 10px;
+    color: #d4c2a7;
+    font-size: 14px;
+}
+
+.horizontal-cards-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Улучшенный стиль для групп карт в инвентаре */
+#cards-inventory h4 {
+    color: #b89d6e;
+    margin-top: 15px;
+    text-align: center;
+    position: relative;
+    padding-bottom: 5px;
+}
+
+#cards-inventory h4:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #b89d6e, transparent);
+}
+
+/* Улучшенные стили для специальных карт */
+.special-cards-container .special-card-group:last-child hr {
+    display: none;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 767px) {
+    .suits-container, .horizontal-cards-grid {
+        gap: 5px;
+    }
+    
+    .shop-item {
+        width: 100px;
+    }
+    
+    .card-skin-group, .special-card-group {
+        padding: 10px;
+    }
+}
