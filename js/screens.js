@@ -197,85 +197,129 @@ function showLevelLore() {
     const levelId = window.currentLevelId;
     const level = gameSettings.levels.find(l => l.id === levelId);
     
-    if (!level) {
-        console.error("Level not found:", levelId);
-        showGameMessage("Error: Level data not found", "warning");
+    if (!level || !level.lore) {
+        console.error("Level not found or has no lore:", levelId);
+        showGameMessage("Error: Level lore data not found", "warning");
         return;
     }
     
-    // Создаем модальное окно для лора
-    const modal = document.createElement('div');
-    modal.id = 'level-lore-modal';
-    modal.className = 'modal-overlay';
+    // Получаем контейнер для лора
+    const loreContainer = document.getElementById('level-lore-container');
+    if (!loreContainer) {
+        console.error("Level lore container not found");
+        return;
+    }
     
-    // Добавляем стили, если их еще нет
-    if (!document.getElementById('lore-modal-styles')) {
-        const styleElement = document.createElement('style');
-        styleElement.id = 'lore-modal-styles';
-        styleElement.textContent = `
-            .modal-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
+    // Очищаем контейнер
+    loreContainer.innerHTML = '';
+    
+    // Создаем первую страницу лора (активна по умолчанию)
+    const chapter1 = document.createElement('div');
+    chapter1.className = 'lore-step active';
+    chapter1.id = 'level-lore-step-1';
+    
+    chapter1.innerHTML = `
+        <h2>${level.lore.chapter1.title}</h2>
+        <img src="assets/lore/level${level.id}_1.png" alt="${level.lore.chapter1.title}" class="lore-image" onerror="this.src='assets/lore/placeholder.png'">
+        <p>${level.lore.chapter1.text[0]}</p>
+        <p>${level.lore.chapter1.text[1]}</p>
+        <button id="level-lore-back-1" class="back-btn">Back</button>
+        <button id="level-lore-next-1">Next</button>
+    `;
+    
+    // Создаем вторую страницу лора (неактивна по умолчанию)
+    const chapter2 = document.createElement('div');
+    chapter2.className = 'lore-step';
+    chapter2.id = 'level-lore-step-2';
+    
+    chapter2.innerHTML = `
+        <h2>${level.lore.chapter2.title}</h2>
+        <img src="assets/lore/level${level.id}_2.png" alt="${level.lore.chapter2.title}" class="lore-image" onerror="this.src='assets/lore/placeholder.png'">
+        <p>${level.lore.chapter2.text[0]}</p>
+        <p>${level.lore.chapter2.text[1]}</p>
+        <button id="level-lore-back-2" class="back-btn">Back</button>
+        <button id="level-lore-next-2">Begin</button>
+    `;
+    
+    // Добавляем страницы в контейнер
+    loreContainer.appendChild(chapter1);
+    loreContainer.appendChild(chapter2);
+    
+    // Добавляем обработчики событий для кнопок
+    document.getElementById('level-lore-back-1').addEventListener('click', function() {
+        showScreen('level-container');
+    });
+    
+    document.getElementById('level-lore-next-1').addEventListener('click', function() {
+        document.getElementById('level-lore-step-1').classList.remove('active');
+        document.getElementById('level-lore-step-2').classList.add('active');
+    });
+    
+    document.getElementById('level-lore-back-2').addEventListener('click', function() {
+        document.getElementById('level-lore-step-2').classList.remove('active');
+        document.getElementById('level-lore-step-1').classList.add('active');
+    });
+    
+    document.getElementById('level-lore-next-2').addEventListener('click', function() {
+        startLevel();
+    });
+    
+    // Создаем плейсхолдер, если его нет
+    createLorePlaceholder();
+    
+    // Показываем контейнер лора
+    showScreen('level-lore-container');
+}
+
+// Вспомогательная функция для создания плейсхолдера изображений лора
+function createLorePlaceholder() {
+    // Проверяем, существует ли плейсхолдер
+    if (!document.getElementById('lore-placeholder-style')) {
+        // Создаем стиль с плейсхолдером на базе data URL
+        const style = document.createElement('style');
+        style.id = 'lore-placeholder-style';
+        style.textContent = `
+            img.lore-image {
                 width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 2000;
-                backdrop-filter: blur(3px);
-            }
-            
-            .modal-content {
-                background-color: #2b2b2b;
-                border: 2px solid #4a3a2a;
-                border-radius: 10px;
-                padding: 20px;
-                max-width: 600px;
-                width: 90%;
-                max-height: 80vh;
-                overflow-y: auto;
-                position: relative;
-                animation: fadeIn 0.3s ease-out;
-            }
-            
-            .lore-navigation {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 20px;
-            }
-            
-            .lore-chapter {
-                display: none;
-            }
-            
-            .lore-chapter.active {
-                display: block;
-                animation: fadeIn 0.3s ease-out;
-            }
-            
-            .lore-chapter img {
-                max-width: 100%;
-                border-radius: 5px;
-                margin: 15px 0;
+                max-width: 400px;
+                height: auto;
                 border: 1px solid #4a3a2a;
+                border-radius: 5px;
+                margin-bottom: 15px;
+                background-color: #2b2b2b;
+                min-height: 200px;
             }
             
-            .close-button {
+            img.lore-image[src="assets/lore/placeholder.png"]::before {
+                content: "Lore Image";
                 position: absolute;
-                top: 10px;
-                right: 10px;
-                background-color: transparent;
-                border: none;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
                 color: #b89d6e;
-                font-size: 20px;
-                cursor: pointer;
-                padding: 5px 10px;
+                font-size: 16px;
             }
             
-            .close-button:hover {
-                color: #d4c2a7;
+            /* Дополнительные стили для контейнера лора, чтобы гарантировать видимость */
+            #level-lore-container {
+                display: none;
+                z-index: 1500 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                background-color: #2b2b2b !important;
+            }
+            
+            #level-lore-container.active {
+                display: block !important;
+            }
+            
+            .lore-step {
+                display: none;
+                animation: fadeIn 0.3s ease-out;
+            }
+            
+            .lore-step.active {
+                display: block;
             }
             
             @keyframes fadeIn {
@@ -283,108 +327,17 @@ function showLevelLore() {
                 to { opacity: 1; transform: translateY(0); }
             }
         `;
-        document.head.appendChild(styleElement);
-    }
-    
-    // Создаем содержимое модального окна
-    const modalContent = document.createElement('div');
-    modalContent.className = 'modal-content';
-    
-    // Создаем кнопку закрытия
-    const closeButton = document.createElement('button');
-    closeButton.className = 'close-button';
-    closeButton.innerHTML = '&times;';
-    closeButton.onclick = function() {
-        document.body.removeChild(modal);
-    };
-    
-    // Добавляем заголовок уровня
-    const levelTitle = document.createElement('h2');
-    levelTitle.textContent = `Level ${level.id}: ${level.name}`;
-    levelTitle.style.color = '#b89d6e';
-    levelTitle.style.textAlign = 'center';
-    levelTitle.style.marginBottom = '15px';
-    
-    // Добавляем контейнеры для глав лора
-    const chapter1 = document.createElement('div');
-    chapter1.className = 'lore-chapter active';
-    chapter1.id = 'lore-chapter-1';
-    
-    const chapter2 = document.createElement('div');
-    chapter2.className = 'lore-chapter';
-    chapter2.id = 'lore-chapter-2';
-    
-    // Заполняем контент первой главы
-    chapter1.innerHTML = `
-        <h3>${level.lore.chapter1.title}</h3>
-        <img src="assets/lore/level${level.id}_1.png" alt="${level.lore.chapter1.title}" onerror="this.src='assets/lore/placeholder.png'">
-        <p>${level.lore.chapter1.text[0]}</p>
-        <p>${level.lore.chapter1.text[1]}</p>
-    `;
-    
-    // Заполняем контент второй главы
-    chapter2.innerHTML = `
-        <h3>${level.lore.chapter2.title}</h3>
-        <img src="assets/lore/level${level.id}_2.png" alt="${level.lore.chapter2.title}" onerror="this.src='assets/lore/placeholder.png'">
-        <p>${level.lore.chapter2.text[0]}</p>
-        <p>${level.lore.chapter2.text[1]}</p>
-    `;
-    
-    // Создаем навигацию между главами
-    const navigation = document.createElement('div');
-    navigation.className = 'lore-navigation';
-    
-    // Кнопки навигации
-    const prevButton = document.createElement('button');
-    prevButton.textContent = 'Previous';
-    prevButton.style.display = 'none'; // Изначально скрыта
-    prevButton.onclick = function() {
-        chapter2.classList.remove('active');
-        chapter1.classList.add('active');
-        prevButton.style.display = 'none';
-        nextButton.textContent = 'Next';
-    };
-    
-    const nextButton = document.createElement('button');
-    nextButton.textContent = 'Next';
-    nextButton.onclick = function() {
-        if (chapter1.classList.contains('active')) {
-            chapter1.classList.remove('active');
-            chapter2.classList.add('active');
-            prevButton.style.display = 'block';
-            nextButton.textContent = 'Start Level';
-        } else {
-            // Если мы на второй главе, запускаем уровень
-            document.body.removeChild(modal);
-            showScreen('game-screen');
-            startLevel();
+        document.head.appendChild(style);
+        
+        // Создаем пустое изображение-плейсхолдер, если его нет в документе
+        if (!document.querySelector('img[src="assets/lore/placeholder.png"]')) {
+            const img = document.createElement('img');
+            img.src = 'assets/lore/placeholder.png';
+            img.style.display = 'none';
+            img.id = 'lore-placeholder';
+            document.body.appendChild(img);
         }
-    };
-    
-    // Кнопка возврата
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back to Level';
-    backButton.onclick = function() {
-        document.body.removeChild(modal);
-    };
-    
-    // Добавляем кнопки в навигацию
-    navigation.appendChild(backButton);
-    navigation.appendChild(prevButton);
-    navigation.appendChild(nextButton);
-    
-    // Собираем все элементы в модальное окно
-    modalContent.appendChild(closeButton);
-    modalContent.appendChild(levelTitle);
-    modalContent.appendChild(chapter1);
-    modalContent.appendChild(chapter2);
-    modalContent.appendChild(navigation);
-    
-    modal.appendChild(modalContent);
-    document.body.appendChild(modal);
-    
-    // Проверяем, существуют ли изображения
-    ensureLoreImagesExist(level.id);
+    }
 }
 
 // Функция для проверки и создания плейсхолдеров изображений лора

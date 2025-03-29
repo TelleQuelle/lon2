@@ -534,30 +534,43 @@ function showScreen(screenId) {
         'wallet-container', 'profile-container', 'tutorial-container',
         'lore-container', 'main-menu', 'play-menu', 'campaign-container',
         'level-container', 'game-screen', 'shop-container',
-        'inventory-container', 'about-container', 'admin-container'
+        'inventory-container', 'about-container', 'admin-container',
+        'level-lore-container' // Добавляем контейнер лора уровня
     ];
-    
+   
     screens.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
             element.style.display = 'none';
+            // Удаляем класс active если он есть
+            if (element.classList.contains('active')) {
+                element.classList.remove('active');
+            }
         }
     });
-    
+   
     // Показываем запрошенный экран
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
         targetScreen.style.display = 'block';
-        
+        // Добавляем класс active
+        targetScreen.classList.add('active');
+       
         // Если это главное меню, убедимся, что информация актуальна
         if (screenId === 'main-menu') {
             updateUserInfo();
         }
-        
+       
         // Если это экран кампании, обновим список уровней
         if (screenId === 'campaign-container') {
             updateLevelsList();
         }
+        
+        // Генерируем событие о смене экрана
+        const event = new CustomEvent('screenChanged', { 
+            detail: { screen: screenId } 
+        });
+        document.dispatchEvent(event);
     }
 }
 
