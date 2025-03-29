@@ -170,76 +170,6 @@ function getLevelStatistics(levelId) {
     return stats ? JSON.parse(stats) : null;
 }
 
-// Функция для показа лора уровня с измененными кнопками
-function showLevelLore() {
-    // Получаем текущий уровень
-    const levelId = window.currentLevelId;
-    const level = gameSettings.levels.find(l => l.id === levelId);
-    
-    if (!level) {
-        console.error("Level not found:", levelId);
-        return;
-    }
-    
-    // Заполняем контейнер с лором
-    const loreContainer = document.getElementById('level-lore-container');
-    
-    if (!loreContainer) {
-        console.error("Lore container not found");
-        return;
-    }
-    
-    // Создаем шаги лора
-    loreContainer.innerHTML = `
-        <div class="lore-step" id="level-lore-step-1" style="display: block;">
-            <h2>${level.lore.chapter1.title}</h2>
-            <img src="assets/lore/level${level.id}_1.png" alt="${level.lore.chapter1.title}" class="lore-image">
-            <p>${level.lore.chapter1.text[0]}</p>
-            <p>${level.lore.chapter1.text[1]}</p>
-            <button id="level-lore-next-1">Next</button>
-            <button id="level-lore-back-1" class="back-btn">Back to Level</button>
-        </div>
-        <div class="lore-step" id="level-lore-step-2">
-            <h2>${level.lore.chapter2.title}</h2>
-            <img src="assets/lore/level${level.id}_2.png" alt="${level.lore.chapter2.title}" class="lore-image">
-            <p>${level.lore.chapter2.text[0]}</p>
-            <p>${level.lore.chapter2.text[1]}</p>
-            <button id="level-lore-prev-2">Previous</button>
-            <button id="level-lore-back-2" class="back-btn">Back to Level</button>
-            <button id="level-lore-start" class="action-btn">Start</button>
-        </div>
-    `;
-    
-    // Добавляем обработчики событий
-    document.getElementById('level-lore-next-1').addEventListener('click', () => {
-        document.getElementById('level-lore-step-1').style.display = 'none';
-        document.getElementById('level-lore-step-2').style.display = 'block';
-    });
-    
-    document.getElementById('level-lore-prev-2').addEventListener('click', () => {
-        document.getElementById('level-lore-step-2').style.display = 'none';
-        document.getElementById('level-lore-step-1').style.display = 'block';
-    });
-    
-    // Кнопки возврата к меню уровня
-    document.getElementById('level-lore-back-1').addEventListener('click', () => {
-        showScreen('level-container');
-    });
-    
-    document.getElementById('level-lore-back-2').addEventListener('click', () => {
-        showScreen('level-container');
-    });
-    
-    // Кнопка начала уровня
-    document.getElementById('level-lore-start').addEventListener('click', () => {
-        showScreen('game-screen'); // Сначала меняем экран
-        startLevel(); // Потом запускаем уровень
-    });
-    
-    // Показываем экран с лором
-    showScreen('level-lore-container');
-}
-
 // Функция для начала уровня
 function startLevel() {
     // Получаем текущий уровень
@@ -259,6 +189,245 @@ function startLevel() {
     
     // Начинаем игру
     startGame(level);
+}
+
+// Функция для показа лора уровня
+function showLevelLore() {
+    // Получаем текущий уровень
+    const levelId = window.currentLevelId;
+    const level = gameSettings.levels.find(l => l.id === levelId);
+    
+    if (!level) {
+        console.error("Level not found:", levelId);
+        showGameMessage("Error: Level data not found", "warning");
+        return;
+    }
+    
+    // Создаем модальное окно для лора
+    const modal = document.createElement('div');
+    modal.id = 'level-lore-modal';
+    modal.className = 'modal-overlay';
+    
+    // Добавляем стили, если их еще нет
+    if (!document.getElementById('lore-modal-styles')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'lore-modal-styles';
+        styleElement.textContent = `
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 2000;
+                backdrop-filter: blur(3px);
+            }
+            
+            .modal-content {
+                background-color: #2b2b2b;
+                border: 2px solid #4a3a2a;
+                border-radius: 10px;
+                padding: 20px;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                position: relative;
+                animation: fadeIn 0.3s ease-out;
+            }
+            
+            .lore-navigation {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
+            }
+            
+            .lore-chapter {
+                display: none;
+            }
+            
+            .lore-chapter.active {
+                display: block;
+                animation: fadeIn 0.3s ease-out;
+            }
+            
+            .lore-chapter img {
+                max-width: 100%;
+                border-radius: 5px;
+                margin: 15px 0;
+                border: 1px solid #4a3a2a;
+            }
+            
+            .close-button {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background-color: transparent;
+                border: none;
+                color: #b89d6e;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 5px 10px;
+            }
+            
+            .close-button:hover {
+                color: #d4c2a7;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(styleElement);
+    }
+    
+    // Создаем содержимое модального окна
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    
+    // Создаем кнопку закрытия
+    const closeButton = document.createElement('button');
+    closeButton.className = 'close-button';
+    closeButton.innerHTML = '&times;';
+    closeButton.onclick = function() {
+        document.body.removeChild(modal);
+    };
+    
+    // Добавляем заголовок уровня
+    const levelTitle = document.createElement('h2');
+    levelTitle.textContent = `Level ${level.id}: ${level.name}`;
+    levelTitle.style.color = '#b89d6e';
+    levelTitle.style.textAlign = 'center';
+    levelTitle.style.marginBottom = '15px';
+    
+    // Добавляем контейнеры для глав лора
+    const chapter1 = document.createElement('div');
+    chapter1.className = 'lore-chapter active';
+    chapter1.id = 'lore-chapter-1';
+    
+    const chapter2 = document.createElement('div');
+    chapter2.className = 'lore-chapter';
+    chapter2.id = 'lore-chapter-2';
+    
+    // Заполняем контент первой главы
+    chapter1.innerHTML = `
+        <h3>${level.lore.chapter1.title}</h3>
+        <img src="assets/lore/level${level.id}_1.png" alt="${level.lore.chapter1.title}" onerror="this.src='assets/lore/placeholder.png'">
+        <p>${level.lore.chapter1.text[0]}</p>
+        <p>${level.lore.chapter1.text[1]}</p>
+    `;
+    
+    // Заполняем контент второй главы
+    chapter2.innerHTML = `
+        <h3>${level.lore.chapter2.title}</h3>
+        <img src="assets/lore/level${level.id}_2.png" alt="${level.lore.chapter2.title}" onerror="this.src='assets/lore/placeholder.png'">
+        <p>${level.lore.chapter2.text[0]}</p>
+        <p>${level.lore.chapter2.text[1]}</p>
+    `;
+    
+    // Создаем навигацию между главами
+    const navigation = document.createElement('div');
+    navigation.className = 'lore-navigation';
+    
+    // Кнопки навигации
+    const prevButton = document.createElement('button');
+    prevButton.textContent = 'Previous';
+    prevButton.style.display = 'none'; // Изначально скрыта
+    prevButton.onclick = function() {
+        chapter2.classList.remove('active');
+        chapter1.classList.add('active');
+        prevButton.style.display = 'none';
+        nextButton.textContent = 'Next';
+    };
+    
+    const nextButton = document.createElement('button');
+    nextButton.textContent = 'Next';
+    nextButton.onclick = function() {
+        if (chapter1.classList.contains('active')) {
+            chapter1.classList.remove('active');
+            chapter2.classList.add('active');
+            prevButton.style.display = 'block';
+            nextButton.textContent = 'Start Level';
+        } else {
+            // Если мы на второй главе, запускаем уровень
+            document.body.removeChild(modal);
+            showScreen('game-screen');
+            startLevel();
+        }
+    };
+    
+    // Кнопка возврата
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back to Level';
+    backButton.onclick = function() {
+        document.body.removeChild(modal);
+    };
+    
+    // Добавляем кнопки в навигацию
+    navigation.appendChild(backButton);
+    navigation.appendChild(prevButton);
+    navigation.appendChild(nextButton);
+    
+    // Собираем все элементы в модальное окно
+    modalContent.appendChild(closeButton);
+    modalContent.appendChild(levelTitle);
+    modalContent.appendChild(chapter1);
+    modalContent.appendChild(chapter2);
+    modalContent.appendChild(navigation);
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Проверяем, существуют ли изображения
+    ensureLoreImagesExist(level.id);
+}
+
+// Функция для проверки и создания плейсхолдеров изображений лора
+function ensureLoreImagesExist(levelId) {
+    // Создаем массив с путями к изображениям
+    const imagePaths = [
+        `assets/lore/level${levelId}_1.png`,
+        `assets/lore/level${levelId}_2.png`
+    ];
+    
+    // Создаем плейсхолдер, если он не существует
+    if (!document.querySelector('img[src="assets/lore/placeholder.png"]')) {
+        const placeholderCanvas = document.createElement('canvas');
+        placeholderCanvas.width = 400;
+        placeholderCanvas.height = 200;
+        
+        const ctx = placeholderCanvas.getContext('2d');
+        ctx.fillStyle = '#2b2b2b';
+        ctx.fillRect(0, 0, 400, 200);
+        ctx.strokeStyle = '#4a3a2a';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(5, 5, 390, 190);
+        
+        ctx.fillStyle = '#b89d6e';
+        ctx.font = '20px MedievalSharp, Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Lore Image Placeholder', 200, 100);
+        
+        // Создаем плейсхолдер
+        const placeholderImg = new Image();
+        placeholderImg.src = placeholderCanvas.toDataURL('image/png');
+        placeholderImg.style.display = 'none';
+        placeholderImg.id = 'lore-placeholder';
+        document.body.appendChild(placeholderImg);
+        
+        // Назначаем плейсхолдер как src для изображений, которые не загрузились
+        document.querySelectorAll('img[src^="assets/lore/level"]').forEach(img => {
+            img.onerror = function() {
+                this.src = placeholderImg.src;
+            };
+        });
+    }
 }
 
 // Функция для инициализации игрового экрана
@@ -392,164 +561,6 @@ function leaveGame() {
     if (confirm("Are you sure you want to leave the game? Your progress will be lost.")) {
         showScreen('level-container');
     }
-}
-
-// Функция для добавления новой кнопки лора
-function addAlternateLoreButton() {
-    // Находим меню уровня
-    const levelContainer = document.getElementById('level-container');
-    const originalLoreBtn = document.getElementById('level-lore-btn');
-    
-    if (levelContainer && originalLoreBtn) {
-        // Скрываем оригинальную кнопку, чтобы избежать проблем с квадратом
-        originalLoreBtn.style.display = 'none';
-        
-        // Создаем новую кнопку
-        const newLoreBtn = document.createElement('button');
-        newLoreBtn.id = 'alternate-lore-btn';
-        newLoreBtn.textContent = 'View Lore';
-        newLoreBtn.className = originalLoreBtn.className; // Сохраняем классы оригинальной кнопки
-        
-        // Вставляем новую кнопку на место старой
-        originalLoreBtn.parentNode.insertBefore(newLoreBtn, originalLoreBtn);
-        
-        // Добавляем обработчик для новой кнопки
-        newLoreBtn.addEventListener('click', showAlternateLore);
-    }
-}
-
-// Функция для отображения лора в модальном окне
-function showAlternateLore() {
-    // Получаем текущий уровень из localStorage или другого хранилища
-    const currentLevel = getCurrentLevel(); // Эту функцию нужно реализовать или заменить
-    
-    // Создаем модальное окно
-    const modal = document.createElement('div');
-    modal.id = 'alternate-lore-modal';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-    modal.style.display = 'flex';
-    modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'center';
-    modal.style.zIndex = '9999';
-    
-    // Создаем содержимое модального окна
-    const content = document.createElement('div');
-    content.style.backgroundColor = '#2b2b2b';
-    content.style.padding = '20px';
-    content.style.borderRadius = '10px';
-    content.style.border = '2px solid #4a3a2a';
-    content.style.maxWidth = '600px';
-    content.style.width = '90%';
-    content.style.maxHeight = '80vh';
-    content.style.overflow = 'auto';
-    content.style.position = 'relative';
-    
-    // Добавляем заголовок
-    const title = document.createElement('h2');
-    title.style.color = '#b89d6e';
-    title.style.marginBottom = '15px';
-    title.textContent = `Level ${currentLevel.number}: ${currentLevel.title} - Lore`;
-    content.appendChild(title);
-    
-    // Добавляем содержимое лора
-    if (currentLevel.lore) {
-        // Если у нас есть глава 1
-        if (currentLevel.lore.chapter1) {
-            const chapter1Title = document.createElement('h3');
-            chapter1Title.style.color = '#b89d6e';
-            chapter1Title.style.marginTop = '20px';
-            chapter1Title.textContent = currentLevel.lore.chapter1.title;
-            content.appendChild(chapter1Title);
-            
-            if (currentLevel.lore.chapter1.image) {
-                const image1 = document.createElement('img');
-                image1.src = currentLevel.lore.chapter1.image;
-                image1.style.maxWidth = '100%';
-                image1.style.borderRadius = '5px';
-                image1.style.marginBottom = '15px';
-                content.appendChild(image1);
-            }
-            
-            const text1 = document.createElement('p');
-            text1.textContent = currentLevel.lore.chapter1.text;
-            content.appendChild(text1);
-        }
-        
-        // Если у нас есть глава 2
-        if (currentLevel.lore.chapter2) {
-            const chapter2Title = document.createElement('h3');
-            chapter2Title.style.color = '#b89d6e';
-            chapter2Title.style.marginTop = '20px';
-            chapter2Title.textContent = currentLevel.lore.chapter2.title;
-            content.appendChild(chapter2Title);
-            
-            if (currentLevel.lore.chapter2.image) {
-                const image2 = document.createElement('img');
-                image2.src = currentLevel.lore.chapter2.image;
-                image2.style.maxWidth = '100%';
-                image2.style.borderRadius = '5px';
-                image2.style.marginBottom = '15px';
-                content.appendChild(image2);
-            }
-            
-            const text2 = document.createElement('p');
-            text2.textContent = currentLevel.lore.chapter2.text;
-            content.appendChild(text2);
-        }
-    } else {
-        // Если данных о лоре нет
-        const noLore = document.createElement('p');
-        noLore.textContent = "No lore available for this level yet.";
-        content.appendChild(noLore);
-    }
-    
-    // Добавляем кнопку закрытия
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.style.marginTop = '20px';
-    closeBtn.style.backgroundColor = '#4a3a2a';
-    closeBtn.style.color = '#d4c2a7';
-    closeBtn.style.border = '1px solid #b89d6e';
-    closeBtn.style.padding = '10px 20px';
-    closeBtn.style.borderRadius = '5px';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.style.display = 'block';
-    closeBtn.style.margin = '20px auto 0';
-    
-    closeBtn.addEventListener('click', function() {
-        document.body.removeChild(modal);
-    });
-    
-    content.appendChild(closeBtn);
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-}
-
-// Функция для получения данных текущего уровня
-// Это заглушка - вам нужно реализовать ее в соответствии с вашей логикой хранения данных
-function getCurrentLevel() {
-    // Пример данных - замените на реальные
-    return {
-        number: 1,
-        title: "Treachery",
-        lore: {
-            chapter1: {
-                title: "The First Circle",
-                image: "assets/lore/level1_1.png",
-                text: "As you descend into the first circle of the Abyss, the air grows thick with betrayal. The walls seem to whisper the tales of those who came before you, their trust shattered like glass upon stone."
-            },
-            chapter2: {
-                title: "The Game Begins",
-                image: "assets/lore/level1_2.png",
-                text: "A hunched figure emerges from the shadows, cards clutched in bony fingers. 'Welcome to Treachery,' it hisses. 'The rules are simple: win and you may ascend, lose and join us in eternal torment.'"
-            }
-        }
-    };
 }
 
 // Вызываем функцию добавления кнопки при загрузке страницы
