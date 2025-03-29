@@ -515,7 +515,11 @@ function setupEventListeners() {
     document.getElementById('admin-button').addEventListener('click', openAdminPanel);
     document.getElementById('close-admin-btn').addEventListener('click', () => showScreen('main-menu'));
     document.getElementById('add-item-form').addEventListener('submit', addNewItem);
+
+    document.getElementById('view-combinations-btn')?.addEventListener('click', showAllCombinations);
 }
+
+window.showAllCombinations = showAllCombinations;
 
 // Функция для форматирования адреса кошелька (сокращение)
 function formatWalletAddress(address) {

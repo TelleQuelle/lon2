@@ -541,7 +541,8 @@ function initializePlayerInventoryData() {
         playerData.deck = {};
         
         // Проходим по всем картам стандартной колоды
-        inventoryState.standardDeck.forEach(card => {
+        const standardDeck = inventoryState.standardDeck || generateStandardDeck();
+        standardDeck.forEach(card => {
             const cardKey = `${card.value}_of_${card.suit}`;
             playerData.deck[cardKey] = {
                 value: card.value,
@@ -554,7 +555,7 @@ function initializePlayerInventoryData() {
     }
     
     // Проверяем инициализацию кубиков
-    if (!playerData.selectedDice || playerData.selectedDice.length === 0) {
+    if (!playerData.selectedDice || !Array.isArray(playerData.selectedDice) || playerData.selectedDice.length === 0) {
         // Инициализируем два стандартных кубика
         playerData.selectedDice = [
             { id: 'standard_dice_1', type: 'standard', name: 'Standard Dice' },
@@ -1059,8 +1060,29 @@ function replaceCard(newCard) {
         return;
     }
     
+    // Проверяем, что у исходной карты есть необходимые свойства
+    if (!originalCard.value || !originalCard.suit) {
+        showGameMessage("Error: Invalid card data", "warning");
+        return;
+    }
+    
+    // Проверяем, что у новой карты есть необходимые свойства
+    if (!newCard.name || !newCard.image) {
+        showGameMessage("Error: Invalid replacement card data", "warning");
+        return;
+    }
+    
     // Ключ карты в колоде
     const cardKey = `${originalCard.value}_of_${originalCard.suit}`;
+    
+    // Обработка плейсхолдера масти в пути к изображению
+    let imagePath = newCard.image;
+    if (newCard.image.includes('{suit}')) {
+        imagePath = newCard.image.replace('{suit}', originalCard.suit);
+    }
+    if (imagePath.includes('{value}')) {
+        imagePath = imagePath.replace('{value}', originalCard.value);
+    }
     
     // Создаем обновленную карту
     const updatedCard = {
@@ -1068,7 +1090,7 @@ function replaceCard(newCard) {
         suit: originalCard.suit,
         type: newCard.type,
         name: newCard.name,
-        image: newCard.image.replace('{suit}', originalCard.suit),
+        image: imagePath,
         id: newCard.id,
         effect: newCard.effect,
         rarity: newCard.rarity

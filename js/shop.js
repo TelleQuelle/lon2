@@ -246,40 +246,54 @@ function buyItem(item, type) {
         return;
     }
     
+    // Проверяем, есть ли уже этот товар у игрока
+    const isOwned = type === 'card' || type === 'special-card' 
+        ? playerData.inventory.cards.some(card => card.id === item.id)
+        : playerData.inventory.dice.some(die => die.id === item.id);
+    
+    if (isOwned) {
+        showGameMessage("You already own this item", "info");
+        return;
+    }
+    
     // Отнимаем серебро
     playerData.silver -= item.price;
     
-    // Добавляем товар в инвентарь игрока
+    // Создаем объект предмета с проверками
+    const newItem = {
+        id: item.id || generateUID(),
+        name: item.name || "Unknown Item",
+        image: item.image || "",
+        type: type || "unknown",
+        rarity: item.rarity || "Common"
+    };
+    
+    // Добавляем дополнительные свойства в зависимости от типа
     if (type === 'card' || type === 'special-card') {
-        playerData.inventory.cards.push({
-            id: item.id,
-            name: item.name,
-            image: item.image,
-            type: type,
-            effect: item.effect,
-            value: item.value,
-            rarity: item.rarity,
-            suit: item.suit,
-            parentId: item.parentId
-        });
+        newItem.effect = item.effect || null;
+        newItem.value = item.value || null;
+        newItem.suit = item.suit || null;
+        newItem.parentId = item.parentId || null;
+        
+        // Добавляем товар в инвентарь игрока
+        playerData.inventory.cards.push(newItem);
     } else {
-        playerData.inventory.dice.push({
-            id: item.id,
-            name: item.name,
-            image: item.image,
-            type: type,
-            effect: item.effect,
-            weights: item.weights,
-            value: item.value,
-            rarity: item.rarity
-        });
+        newItem.effect = item.effect || null;
+        newItem.weights = item.weights || null;
+        newItem.value = item.value || null;
+        
+        // Добавляем товар в инвентарь игрока
+        playerData.inventory.dice.push(newItem);
     }
     
     // Сохраняем данные игрока
     savePlayerData();
     
     // Обновляем отображение количества серебра
-    document.getElementById('shop-silver').textContent = playerData.silver;
+    const silverDisplay = document.getElementById('shop-silver');
+    if (silverDisplay) {
+        silverDisplay.textContent = playerData.silver;
+    }
     
     // Обновляем отображение товаров
     loadShopItems();
@@ -490,77 +504,109 @@ initShop();
 
 // Функция для отображения скинов карт с группировкой по значению и масти
 function displayCardSkins(container, shopData) {
-    // Группировка скинов карт по значению
-    const valueGroups = {};
+    // Проверка наличия данных
+    if (!container || !shopData || !shopData.cardSkins) {
+        console.error("Missing container or shop data for card skins");
+        return;
+    }
+    
+    // Очищаем контейнер перед добавлением
+    container.innerHTML = '';
+    
+    // Добавляем заголовок для скинов карт
+    const cardSkinsHeader = document.createElement('div');
+    cardSkinsHeader.className = 'category-header';
+    cardSkinsHeader.innerHTML = '<h3>Card Skins</h3><p>Customize your cards with these stylish designs</p>';
+    container.appendChild(cardSkinsHeader);
+    
+    // Проверяем, есть ли скины карт
+    const cardSkins = shopData.cardSkins;
+    if (!cardSkins || Object.keys(cardSkins).length === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.textContent = 'No card skins available in the shop.';
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '20px';
+        container.appendChild(emptyMessage);
+        return;
+    }
+    
+    // Группируем скины карт по оригинальному скину
+    const skinGroups = {};
     
     // Проходим по всем скинам карт
-    Object.entries(shopData.cardSkins).forEach(([skinId, skinData]) => {
-        // Для каждого значения карты
-        ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'].forEach(value => {
-            if (!valueGroups[value]) {
-                valueGroups[value] = [];
-            }
-            
-            // Добавляем скин с этим значением
-            valueGroups[value].push({
-                id: `${skinId}_${value}`,
-                name: `${skinData.name} (${value})`,
-                originalName: skinData.name,
-                value: value,
+    Object.entries(cardSkins).forEach(([skinId, skinData]) => {
+        if (!skinGroups[skinId]) {
+            skinGroups[skinId] = {
+                name: skinData.name,
                 price: skinData.price,
                 rarity: skinData.rarity,
                 description: skinData.description,
                 imagePath: skinData.image,
-                parentId: skinId
+                items: []
+            };
+        }
+        
+        // Для каждой масти создаем отдельный элемент
+        ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
+            // Формируем ID для конкретной масти
+            const itemId = `${skinId}_${suit}`;
+            
+            // Проверяем, куплен ли этот скин
+            const isOwned = playerData.inventory.cards.some(card => 
+                card.id === itemId || (card.parentId === skinId && card.suit === suit)
+            );
+            
+            // Добавляем в группу
+            skinGroups[skinId].items.push({
+                id: itemId,
+                suit: suit,
+                isOwned: isOwned
             });
         });
     });
     
-    // Создаем группы для каждого значения
-    Object.entries(valueGroups).forEach(([value, skins]) => {
-        // Создаем заголовок для значения
-        const valueHeader = document.createElement('h3');
-        valueHeader.textContent = getValueDisplayName(value);
-        container.appendChild(valueHeader);
+    // Создаем группу для всех скинов
+    const skinsGroup = document.createElement('div');
+    skinsGroup.className = 'skin-group';
+    container.appendChild(skinsGroup);
+    
+    // Добавляем каждую группу
+    Object.entries(skinGroups).forEach(([skinId, group]) => {
+        // Создаем контейнер для группы
+        const skinGroupElement = document.createElement('div');
+        skinGroupElement.className = 'card-skin-group';
         
-        // Создаем контейнер для скинов этого значения
-        const valueContainer = document.createElement('div');
-        valueContainer.className = 'skin-group';
-        container.appendChild(valueContainer);
+        // Добавляем заголовок группы
+        const groupHeader = document.createElement('h4');
+        groupHeader.textContent = group.name;
+        groupHeader.className = 'group-title';
+        skinGroupElement.appendChild(groupHeader);
         
-        // Добавляем скины
-        skins.forEach(skin => {
-            // Создаем подгруппу для скина
-            const skinGroup = document.createElement('div');
-            skinGroup.className = 'card-skin-item';
-            skinGroup.innerHTML = `<h4>${skin.originalName}</h4>`;
-            valueContainer.appendChild(skinGroup);
+        // Добавляем контейнер для элементов
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'skin-items';
+        skinGroupElement.appendChild(itemsContainer);
+        
+        // Добавляем элементы
+        group.items.forEach(item => {
+            // Создаем элемент для карты
+            const cardElement = createShopItem({
+                id: item.id,
+                name: `${getSymbolForSuit(item.suit)} ${getSuitName(item.suit)}`,
+                price: group.price,
+                rarity: group.rarity,
+                description: group.description,
+                image: group.imagePath.replace('{suit}', item.suit),
+                parentId: skinId,
+                suit: item.suit
+            }, 'card', item.isOwned);
             
-            // Добавляем карты по мастям
-            ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
-                // Формируем ID для карты конкретной масти
-                const itemId = `${skin.id}_${suit}`;
-                
-                // Проверяем, куплен ли скин для этой масти
-                const isOwned = playerData.inventory.cards.some(card => card.id === itemId);
-                
-                // Создаем элемент товара
-                const itemElement = createShopItem({
-                    id: itemId,
-                    name: `${getSymbolForSuit(suit)} ${getSuitName(suit)}`,
-                    price: skin.price,
-                    rarity: skin.rarity,
-                    description: skin.description,
-                    image: skin.imagePath.replace('{suit}', suit).replace('{value}', value),
-                    parentId: skin.parentId,
-                    suit: suit,
-                    value: value
-                }, 'card', isOwned);
-                
-                // Добавляем в группу
-                skinGroup.appendChild(itemElement);
-            });
+            // Добавляем элемент в контейнер
+            itemsContainer.appendChild(cardElement);
         });
+        
+        // Добавляем группу в основной контейнер
+        skinsGroup.appendChild(skinGroupElement);
     });
 }
 
@@ -690,4 +736,8 @@ function displaySpecialDice(container, shopData) {
         // Добавляем в контейнер
         container.appendChild(itemElement);
     });
+}
+
+function generateUID() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }

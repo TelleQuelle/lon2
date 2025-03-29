@@ -105,6 +105,11 @@ function getRandomSelectedDice() {
         ];
     }
     
+    // Если выбран только один кубик, дублируем его
+    if (playerData.selectedDice.length === 1) {
+        return [playerData.selectedDice[0], playerData.selectedDice[0]];
+    }
+    
     // Если выбрано ровно 2 кубика, возвращаем их
     if (playerData.selectedDice.length === 2) {
         return [...playerData.selectedDice];
@@ -114,6 +119,7 @@ function getRandomSelectedDice() {
     const shuffled = [...playerData.selectedDice].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 2);
 }
+
 
 // Функция для генерации взвешенного случайного значения
 function generateWeightedValue(weights) {
@@ -859,10 +865,11 @@ function checkValidCombinations() {
     const dieValue = gameState.selectedDie;
     const validCards = gameSettings.diceCombinations[dieValue].cards;
     
-    // Проверяем, есть ли хотя бы одна валидная карта
+    // Проверяем, есть ли хотя бы одна валидная карта или карта с эффектом wildcard
     for (const card of gameState.currentCards) {
-        // Проверяем и специальные эффекты (wildcard)
-        if (validCards.includes(card.value) || card.effect === 'wildcard') {
+        // Явно проверяем значение карты и эффект wildcard
+        if (validCards.includes(card.value) || 
+            (card.effect && card.effect === 'wildcard')) {
             return true;
         }
     }
@@ -872,8 +879,16 @@ function checkValidCombinations() {
 
 // Функция для отображения всех комбинаций и множителей
 function showAllCombinations() {
+    // Проверяем, есть ли модальное окно
+    let modal = document.getElementById('combinations-modal');
+    
+    // Если модальное окно уже существует, удаляем его
+    if (modal) {
+        modal.remove();
+    }
+    
     // Создаем модальное окно
-    const modal = document.createElement('div');
+    modal = document.createElement('div');
     modal.className = 'modal-content';
     modal.id = 'combinations-modal';
     modal.style.display = 'block';
@@ -883,67 +898,133 @@ function showAllCombinations() {
     modal.style.maxHeight = '80%';
     modal.style.overflow = 'auto';
     
-    // Создаем содержимое
-    let content = `
-        <h3>Dice Combinations</h3>
-        <table class="combinations-table">
-            <thead>
-                <tr>
-                    <th>Die</th>
-                    <th>Valid Cards</th>
-                    <th>Points per Card</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-    
-    // Добавляем информацию о комбинациях кубиков
-    for (const [die, combo] of Object.entries(gameSettings.diceCombinations)) {
-        content += `
-            <tr>
-                <td>${die}</td>
-                <td>${combo.cards.join(', ')}</td>
-                <td>${combo.points}</td>
-            </tr>
+    // Проверяем, есть ли настройки для комбинаций
+    if (!gameSettings || !gameSettings.diceCombinations || !gameSettings.multipliers) {
+        modal.innerHTML = `
+            <h3>Combinations</h3>
+            <p>Error: Game settings not available</p>
+            <button id="close-combinations-btn" class="action-btn">Close</button>
         `;
-    }
-    
-    content += `
-            </tbody>
-        </table>
+    } else {
+        // Создаем содержимое
+        let content = `
+            <h3>Dice Combinations</h3>
+            <table class="combinations-table">
+                <thead>
+                    <tr>
+                        <th>Die</th>
+                        <th>Valid Cards</th>
+                        <th>Points per Card</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
         
-        <h3>Multipliers</h3>
-        <table class="combinations-table">
-            <thead>
+        // Добавляем информацию о комбинациях кубиков
+        for (const [die, combo] of Object.entries(gameSettings.diceCombinations)) {
+            content += `
                 <tr>
-                    <th>Condition</th>
-                    <th>Multiplier</th>
+                    <td>${die}</td>
+                    <td>${combo.cards.join(', ')}</td>
+                    <td>${combo.points}</td>
                 </tr>
-            </thead>
-            <tbody>
+            `;
+        }
+        
+        content += `
+                </tbody>
+            </table>
+            
+            <h3>Multipliers</h3>
+            <table class="combinations-table">
+                <thead>
+                    <tr>
+                        <th>Condition</th>
+                        <th>Multiplier</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        // Проверяем, есть ли множитель для тузов
+        if (gameSettings.multipliers.aces) {
+            content += `
                 <tr>
                     <td>Each Ace (A)</td>
                     <td>×${gameSettings.multipliers.aces}</td>
                 </tr>
-                <tr>
-                    <td>2 cards of same suit</td>
-                    <td>×${gameSettings.multipliers.sameSuit[2]}</td>
-                </tr>
-                <tr>
-                    <td>3 cards of same suit</td>
-                    <td>×${gameSettings.multipliers.sameSuit[3]}</td>
-                </tr>
-                <tr>
-                    <td>4+ cards of same suit</td>
-                    <td>×${gameSettings.multipliers.sameSuit[4]}</td>
-                </tr>
-            </tbody>
-        </table>
+            `;
+        }
         
-        <button id="close-combinations-btn" class="action-btn">Close</button>
-    `;
-    
-    modal.innerHTML = content;
+        // Проверяем, есть ли множители для мастей
+        if (gameSettings.multipliers.sameSuit) {
+            // Проверяем каждый множитель отдельно
+            if (gameSettings.multipliers.sameSuit[2]) {
+                content += `
+                    <tr>
+                        <td>2 cards of same suit</td>
+                        <td>×${gameSettings.multipliers.sameSuit[2]}</td>
+                    </tr>
+                `;
+            }
+            
+            if (gameSettings.multipliers.sameSuit[3]) {
+                content += `
+                    <tr>
+                        <td>3 cards of same suit</td>
+                        <td>×${gameSettings.multipliers.sameSuit[3]}</td>
+                    </tr>
+                `;
+            }
+            
+            if (gameSettings.multipliers.sameSuit[4]) {
+                content += `
+                    <tr>
+                        <td>4+ cards of same suit</td>
+                        <td>×${gameSettings.multipliers.sameSuit[4]}</td>
+                    </tr>
+                `;
+            }
+        }
+        
+        content += `
+                </tbody>
+            </table>
+            
+            <h3>Special Effects</h3>
+            <table class="combinations-table">
+                <thead>
+                    <tr>
+                        <th>Special Item</th>
+                        <th>Effect</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Wildcard</td>
+                        <td>Can be used with any die combination</td>
+                    </tr>
+                    <tr>
+                        <td>Extra Turn</td>
+                        <td>Grants an additional turn when used</td>
+                    </tr>
+                    <tr>
+                        <td>Points Multiplier</td>
+                        <td>Increases points for combinations</td>
+                    </tr>
+                    <tr>
+                        <td>Gold Multiplier</td>
+                        <td>Increases silver rewards by 25%</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <button id="close-combinations-btn" class="action-btn">Close</button>
+        `;
+        
+        // Устанавливаем содержимое
+        modal.innerHTML = content;
+    }
     
     // Добавляем стили
     const style = document.createElement('style');
@@ -972,17 +1053,42 @@ function showAllCombinations() {
         #close-combinations-btn {
             display: block;
             margin: 20px auto 10px;
+            background-color: #4a3a2a;
+            color: #d4c2a7;
+            border: 1px solid #b89d6e;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: 'MedievalSharp', 'Georgia', serif;
+        }
+        
+        #close-combinations-btn:hover {
+            background-color: #5a4a3a;
         }
     `;
     
-    document.head.appendChild(style);
+    // Добавляем стили в head, если их там еще нет
+    if (!document.getElementById('combinations-styles')) {
+        style.id = 'combinations-styles';
+        document.head.appendChild(style);
+    }
     
     // Добавляем модальное окно в документ
     document.body.appendChild(modal);
     
     // Добавляем обработчик для кнопки закрытия
-    document.getElementById('close-combinations-btn').addEventListener('click', () => {
-        modal.remove();
+    const closeButton = document.getElementById('close-combinations-btn');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+    
+    // Добавляем обработчик клика вне модального окна для закрытия
+    document.addEventListener('mousedown', function(event) {
+        if (modal && !modal.contains(event.target)) {
+            modal.remove();
+        }
     });
 }
 

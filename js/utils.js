@@ -317,3 +317,89 @@ window.utils = {
     createPulsingText,
     typeWriter
 };
+
+function handleImageError(img, fallbackSrc) {
+    img.onerror = function() {
+        // Если указан резервный источник, используем его
+        if (fallbackSrc) {
+            img.src = fallbackSrc;
+        } else {
+            // Иначе создаем canvas с заполнителем
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width || 100;
+            canvas.height = img.height || 100;
+            
+            // Получаем контекст для рисования
+            const ctx = canvas.getContext('2d');
+            
+            // Заполняем фон
+            ctx.fillStyle = '#3a3a3a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем границу
+            ctx.strokeStyle = '#b89d6e';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+            
+            // Добавляем текст "Image Not Found"
+            ctx.fillStyle = '#d4c2a7';
+            ctx.font = '12px MedievalSharp, Georgia, serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Image', canvas.width / 2, canvas.height / 2 - 8);
+            ctx.fillText('Not Found', canvas.width / 2, canvas.height / 2 + 8);
+            
+            // Применяем canvas как источник изображения
+            img.src = canvas.toDataURL('image/png');
+        }
+    };
+    
+    return img;
+}
+
+// Функция для создания и проверки существования директорий
+function ensureDirectoriesExist(directories) {
+    // В веб-среде это будет просто выводить информацию
+    console.log('Checking required directories:');
+    
+    directories.forEach(dir => {
+        // Здесь только логируем, т.к. в браузере не можем создавать директории
+        console.log(`- ${dir}`);
+    });
+    
+    return true;
+}
+
+// Функция для создания базового изображения, если его нет
+function createBasicImage(width, height, text, color = '#4a3a2a') {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Заполняем фон
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, width, height);
+    
+    // Рисуем границу
+    ctx.strokeStyle = '#b89d6e';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, width - 4, height - 4);
+    
+    // Добавляем текст
+    ctx.fillStyle = '#d4c2a7';
+    ctx.font = '16px MedievalSharp, Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, width / 2, height / 2);
+    
+    return canvas.toDataURL('image/png');
+}
+
+// Добавляем новые функции в глобальный объект utils
+Object.assign(window.utils, {
+    handleImageError,
+    ensureDirectoriesExist,
+    createBasicImage
+});

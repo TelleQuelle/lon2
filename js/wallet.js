@@ -6,14 +6,19 @@
 
 // Проверка наличия установленного расширения Phantom
 function isPhantomInstalled() {
-    const provider = window?.solana;
-    
-    if (!provider?.isPhantom) {
-        console.log("Phantom wallet not found");
+    // Проверка наличия и доступности объекта window.solana
+    if (typeof window === 'undefined' || !window.solana) {
+        console.log("Phantom wallet not detected on this page");
         return false;
     }
     
-    console.log("Phantom wallet found");
+    // Проверка, является ли wallet Phantom
+    if (!window.solana.isPhantom) {
+        console.log("Detected wallet is not Phantom");
+        return false;
+    }
+    
+    console.log("Phantom wallet detected");
     return true;
 }
 
@@ -35,8 +40,19 @@ async function connectWallet() {
     }
     
     try {
+        // Проверяем доступность метода connect
+        if (!window.solana.connect || typeof window.solana.connect !== 'function') {
+            throw new Error("Connect method is not available");
+        }
+        
         // Пытаемся подключиться к кошельку
         const resp = await window.solana.connect();
+        
+        // Проверяем успешность подключения и наличие публичного ключа
+        if (!resp || !resp.publicKey) {
+            throw new Error("Failed to retrieve wallet public key");
+        }
+        
         console.log("Wallet connected:", resp.publicKey.toString());
         
         // Сохраняем адрес кошелька
@@ -45,12 +61,17 @@ async function connectWallet() {
         
         // Переходим к следующему шагу (ввод имени)
         showScreen('profile-container');
-        document.querySelector('#wallet-address span').textContent = formatWalletAddress(playerData.wallet);
+        
+        // Обновляем отображение адреса кошелька
+        const walletAddressElement = document.querySelector('#wallet-address span');
+        if (walletAddressElement) {
+            walletAddressElement.textContent = formatWalletAddress(playerData.wallet);
+        }
         
         showGameMessage("Wallet connected successfully!", "success");
     } catch (err) {
         console.error("Error connecting to wallet:", err);
-        showGameMessage("Failed to connect wallet. Please try again.", "warning");
+        showGameMessage("Failed to connect wallet: " + (err.message || "Unknown error"), "warning");
     }
 }
 
@@ -78,24 +99,38 @@ async function disconnectWallet() {
 async function mintNFTScroll() {
     // Проверяем, подключен ли кошелек
     if (!playerData.wallet) {
-        showGameMessage("Wallet not connected", "warning");
+        showGameMessage("Wallet not connected. Please connect your wallet first.", "warning");
+        return false;
+    }
+    
+    // Проверяем наличие Phantom
+    if (!isPhantomInstalled()) {
+        showGameMessage("Phantom wallet required for NFT minting", "warning");
         return false;
     }
     
     try {
-        // В реальном приложении здесь был бы код для взаимодействия с контрактом Solana
-        // и создания NFT. Это упрощенная версия для демонстрации.
+        // Показываем сообщение о начале минтинга
+        showGameMessage("Preparing to mint your NFT Scroll...", "info");
         
         console.log("Minting NFT Scroll for wallet:", playerData.wallet);
         
-        // Симуляция задержки на операцию блокчейна
+        // В реальном приложении здесь бы шла интеграция с Solana
+        // Симуляция минтинга с задержкой
         await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // В реальном приложении здесь бы была проверка успешности транзакции
+        // Симулируем успешный минтинг
+        
+        // Добавляем отметку о наличии NFT в данных игрока
+        playerData.hasNft = true;
+        savePlayerData();
         
         showGameMessage("Freedom Scroll NFT successfully minted to your wallet!", "success");
         return true;
     } catch (err) {
         console.error("Error minting NFT:", err);
-        showGameMessage("Failed to mint NFT. Please try again later.", "warning");
+        showGameMessage("Failed to mint NFT: " + (err.message || "Unknown error"), "warning");
         return false;
     }
 }
