@@ -578,8 +578,13 @@ function handleClaimRewards() {
     const rewards = window.currentRewards;
     const levelId = rewards.levelId;
     
-    // Добавляем серебро
-    playerData.silver += rewards.silver;
+    // Добавляем серебро ТОЛЬКО если уровень еще не был пройден
+    if (!playerData.completedLevels.includes(levelId)) {
+        playerData.silver += rewards.silver;
+        showGameMessage(`You earned ${rewards.silver} silver!`, "success");
+    } else {
+        showGameMessage("Level already completed before. No silver earned.", "info");
+    }
     
     // Если это последний уровень с NFT, запускаем процесс минтинга
     if (levelId === 10 && rewards.special === "NFT_Scroll") {
@@ -630,8 +635,6 @@ function handleClaimRewards() {
     
     // Обновляем список уровней, чтобы отобразить прогресс
     updateLevelsList();
-    
-    showGameMessage("Rewards claimed successfully!", "success");
 }
 
 // Делаем функцию обработки наград глобально доступной
