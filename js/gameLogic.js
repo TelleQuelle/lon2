@@ -1017,6 +1017,22 @@ function showAllCombinations() {
                         <td>Gold Multiplier</td>
                         <td>Increases silver rewards by 25%</td>
                     </tr>
+                    <tr>
+                        <td>Lower Numbers Die</td>
+                        <td>Higher chance of rolling smaller numbers (1-3)</td>
+                    </tr>
+                    <tr>
+                        <td>Higher Numbers Die</td>
+                        <td>Higher chance of rolling larger numbers (4-6)</td>
+                    </tr>
+                    <tr>
+                        <td>Even Numbers Die</td>
+                        <td>Higher chance of rolling even numbers (2, 4, 6)</td>
+                    </tr>
+                    <tr>
+                        <td>Odd Numbers Die</td>
+                        <td>Higher chance of rolling odd numbers (1, 3, 5)</td>
+                    </tr>
                 </tbody>
             </table>
             
@@ -1095,22 +1111,37 @@ function showAllCombinations() {
 
 // Функция для показа уведомления о подтверждении
 function showConfirmationDialog(message, onConfirm, onCancel) {
+    // Проверяем, не существует ли уже модальное окно
+    let modal = document.getElementById('confirmation-modal');
+    if (modal) {
+        modal.remove();
+    }
+    
     // Создаем модальное окно
-    const modal = document.createElement('div');
+    modal = document.createElement('div');
     modal.className = 'modal-content';
     modal.id = 'confirmation-modal';
     modal.style.display = 'block';
     modal.style.position = 'fixed';
     modal.style.zIndex = '2000';
+    modal.style.top = '50%';
+    modal.style.left = '50%';
+    modal.style.transform = 'translate(-50%, -50%)';
     modal.style.maxWidth = '400px';
+    modal.style.backgroundColor = '#2b2b2b';
+    modal.style.color = '#d4c2a7';
+    modal.style.border = '2px solid #4a3a2a';
+    modal.style.borderRadius = '10px';
+    modal.style.padding = '20px';
+    modal.style.boxShadow = '0 0 15px rgba(0, 0, 0, 0.8)';
     
     // Создаем содержимое
     modal.innerHTML = `
-        <h3>Confirmation</h3>
-        <p>${message}</p>
+        <h3 style="color: #b89d6e; margin-bottom: 15px;">Confirmation</h3>
+        <p style="margin-bottom: 20px;">${message}</p>
         <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <button id="confirm-yes-btn" class="action-btn">Yes</button>
-            <button id="confirm-no-btn" class="action-btn">No</button>
+            <button id="confirm-yes-btn" style="background-color: #4a3a2a; color: #d4c2a7; border: 1px solid #b89d6e; padding: 8px 16px; cursor: pointer; border-radius: 5px;">Yes</button>
+            <button id="confirm-no-btn" style="background-color: #3a3a3a; color: #d4c2a7; border: 1px solid #b89d6e; padding: 8px 16px; cursor: pointer; border-radius: 5px;">No</button>
         </div>
     `;
     
@@ -1127,6 +1158,20 @@ function showConfirmationDialog(message, onConfirm, onCancel) {
         modal.remove();
         if (onCancel) onCancel();
     });
+    
+    // Добавляем обработчик для клика вне модального окна
+    function handleOutsideClick(event) {
+        if (event.target !== modal && !modal.contains(event.target)) {
+            document.removeEventListener('mousedown', handleOutsideClick);
+            modal.remove();
+            if (onCancel) onCancel();
+        }
+    }
+    
+    // Регистрируем обработчик с небольшой задержкой
+    setTimeout(() => {
+        document.addEventListener('mousedown', handleOutsideClick);
+    }, 100);
 }
 
 // Функция для возврата из игры в меню уровня с подтверждением

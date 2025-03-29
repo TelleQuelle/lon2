@@ -508,14 +508,6 @@ function claimRewards() {
     handleClaimRewards();
 }
 
-// Функция для возврата из игры в меню уровня
-function leaveGame() {
-    // Показываем диалог подтверждения
-    if (confirm("Are you sure you want to leave the game? Your progress will be lost.")) {
-        showScreen('level-container');
-    }
-}
-
 // Вызываем функцию добавления кнопки при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     addAlternateLoreButton();
