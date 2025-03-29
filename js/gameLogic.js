@@ -755,12 +755,10 @@ function endTurn() {
     if (gameState.totalScore >= gameState.currentLevel.goal.points) {
         // Победа - игрок достиг целевого количества очков
         gameVictory();
-    } else if (gameState.currentTurn >= gameState.currentLevel.goal.turns && !hasExtraTurn) {
-        // Поражение - использованы все ходы, но цель не достигнута
-        gameDefeat();
-    } else {
-        // Если есть эффект дополнительного хода, не увеличиваем счетчик ходов
+    } else if (gameState.currentTurn >= gameState.currentLevel.goal.turns) {
+        // Достигли предела ходов
         if (hasExtraTurn) {
+            // Если есть эффект дополнительного хода, даем еще один шанс
             showGameMessage("You got an extra turn!", "success");
             
             // Переход к следующему ходу без увеличения счетчика
@@ -768,11 +766,14 @@ function endTurn() {
                 nextTurn(false);
             }, 1500);
         } else {
-            // Обычный переход к следующему ходу
-            setTimeout(() => {
-                nextTurn(true);
-            }, 1500);
+            // Поражение - использованы все ходы, но цель не достигнута
+            gameDefeat();
         }
+    } else {
+        // Обычный переход к следующему ходу
+        setTimeout(() => {
+            nextTurn(true);
+        }, 1500);
     }
 }
 

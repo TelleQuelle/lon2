@@ -288,52 +288,41 @@ function initGameScreen(level) {
 // Функция для отображения результатов уровня
 function showLevelResults(isVictory, level, statistics) {
     try {
-        // Проверяем существование элемента rewards-overlay или создаем его
+        console.log("Showing level results:", isVictory, level, statistics);
+        
+        // Для случая поражения используем упрощенный интерфейс
+        if (!isVictory) {
+            showDefeatScreen();
+            return;
+        }
+        
+        // Определяем награду серебром (случайное значение в диапазоне)
+        const minSilver = level.rewards.silverMin || 100;
+        const maxSilver = level.rewards.silverMax || minSilver + 100;
+        const silverAmount = Math.floor(
+            Math.random() * (maxSilver - minSilver + 1) + minSilver
+        );
+        
+        // Сохраняем данные о награде для последующего клейма
+        window.currentRewards = {
+            silver: silverAmount,
+            special: level.rewards.special || null,
+            levelId: level.id
+        };
+        
+        // Проверяем существование и очищаем контейнер наград
         let overlay = document.getElementById('rewards-overlay');
         
+        // Если оверлея нет, создаем его
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'rewards-overlay';
-            overlay.style.display = 'none';
-            
-            // Создаем контейнер для наград
-            const rewardsContainer = document.createElement('div');
-            rewardsContainer.className = 'rewards-container';
-            
-            overlay.appendChild(rewardsContainer);
             document.body.appendChild(overlay);
         }
         
-        // Получаем контейнер наград
-        const container = overlay.querySelector('.rewards-container');
-        if (!container) {
-            throw new Error("Rewards container not found");
-        }
-        
-        // Настраиваем сообщение
-        if (isVictory) {
-            // Проверяем существование уровня и его наград
-            if (!level || !level.rewards) {
-                throw new Error("Invalid level data");
-            }
-            
-            // Определяем минимальное и максимальное значение наград
-            const minSilver = level.rewards.silverMin || 100;
-            const maxSilver = level.rewards.silverMax || minSilver + 100;
-            
-            // Определяем награду серебром (случайное значение в диапазоне)
-            const silverAmount = Math.floor(
-                Math.random() * (maxSilver - minSilver + 1) + minSilver
-            );
-            
-            // Сохраняем данные о награде для последующего клейма
-            window.currentRewards = {
-                silver: silverAmount,
-                special: level.rewards.special || null
-            };
-            
-            // Создаем HTML для контейнера наград
-            let rewardsHTML = `
+        // Создаем HTML для контейнера наград
+        let rewardsHTML = `
+            <div class="rewards-container">
                 <div class="rewards-header">
                     <h2 class="victory-animation">Victory!</h2>
                     <p>Congratulations! You have completed Level ${level.id}: ${level.name}!</p>
@@ -347,78 +336,38 @@ function showLevelResults(isVictory, level, statistics) {
                         <img src="assets/images/silver_coin.png" alt="Silver" class="reward-icon">
                         <span>${silverAmount} Silver</span>
                     </div>
-            `;
-            
-            // Если есть специальные награды, добавляем их
-            if (level.rewards.special) {
-                if (level.rewards.special === "NFT_Scroll") {
-                    rewardsHTML += `
-                        <div class="reward-item">
-                            <img src="assets/images/scroll.png" alt="NFT Scroll" class="reward-icon">
-                            <span>Freedom Scroll NFT</span>
-                        </div>
-                    `;
-                }
+        `;
+        
+        // Если есть специальные награды, добавляем их
+        if (level.rewards.special) {
+            if (level.rewards.special === "NFT_Scroll") {
+                rewardsHTML += `
+                    <div class="reward-item">
+                        <img src="assets/images/scroll.png" alt="NFT Scroll" class="reward-icon">
+                        <span>Freedom Scroll NFT</span>
+                    </div>
+                `;
             }
-            
-            rewardsHTML += `
+        }
+        
+        rewardsHTML += `
                 </div>
                 
-                <button id="claim-rewards-btn">Claim Rewards</button>
-            `;
-            
-            // Обновляем содержимое контейнера
-            container.innerHTML = rewardsHTML;
-            
-            // Показываем оверлей
-            overlay.style.display = 'flex';
-            
-            // Добавляем анимацию падающих монет, если функция доступна
-            if (window.utils && window.utils.createFallingAnimation) {
-                window.utils.createFallingAnimation(overlay, 'assets/images/silver_coin.png', 20, 3000);
-            }
-            
-            // Добавляем обработчик для кнопки клейма наград
-            const claimButton = document.getElementById('claim-rewards-btn');
-            if (claimButton) {
-                // Удаляем старый обработчик, если он есть
-                const newClaimButton = claimButton.cloneNode(true);
-                claimButton.parentNode.replaceChild(newClaimButton, claimButton);
-                
-                // Добавляем новый обработчик
-                newClaimButton.addEventListener('click', () => {
-                    claimRewards();
-                    overlay.style.display = 'none';
-                });
-            }
-        } else {
-            // В случае поражения используем старый интерфейс
-            const oldOverlay = document.getElementById('level-result');
-            if (!oldOverlay) {
-                throw new Error("Level result overlay not found");
-            }
-            
-            const content = oldOverlay.querySelector('.overlay-content');
-            const title = document.getElementById('result-title');
-            const message = document.getElementById('result-message');
-            
-            if (!content || !title || !message) {
-                throw new Error("Level result elements not found");
-            }
-            
-            title.textContent = "Defeat";
-            title.className = ""; // Сбрасываем классы
-            title.classList.add('defeat-animation');
-            
-            message.textContent = `You failed to complete the level. Try again!`;
-            
-            // Сбрасываем данные о наградах
-            window.currentRewards = null;
-            
-            // Показываем оверлей
-            oldOverlay.classList.add('active');
-            content.classList.add('active');
-        }
+                <button id="claim-rewards-button" class="primary-button">Claim Rewards</button>
+            </div>
+        `;
+        
+        // Обновляем содержимое оверлея
+        overlay.innerHTML = rewardsHTML;
+        
+        // Делаем оверлей видимым
+        overlay.style.display = 'flex';
+        
+        // Добавляем обработчик события напрямую
+        document.getElementById('claim-rewards-button').onclick = function() {
+            console.log("Claim rewards button clicked");
+            handleClaimRewards();
+        };
         
         // Сохраняем статистику уровня
         if (statistics && level) {
@@ -427,98 +376,14 @@ function showLevelResults(isVictory, level, statistics) {
     } catch (error) {
         console.error("Error showing level results:", error);
         // Показываем простое сообщение в случае ошибки
-        showGameMessage(isVictory ? "Victory! Check your rewards." : "Defeat. Try again!", 
-                        isVictory ? "success" : "warning");
+        showGameMessage("Victory! Check your rewards.", "success");
     }
 }
 
 // Функция для клейма наград
 function claimRewards() {
-    if (!window.currentRewards) {
-        showGameMessage("No rewards to claim", "warning");
-        return;
-    }
-    
-    // Получаем текущий уровень
-    const levelId = window.currentLevelId;
-    if (!levelId) {
-        console.error("Current level ID not found");
-        showGameMessage("Error: Could not determine current level", "warning");
-        return;
-    }
-    
-    const level = gameSettings.levels.find(l => l.id === levelId);
-    
-    if (!level) {
-        console.error("Level not found:", levelId);
-        showGameMessage("Error: Level not found", "warning");
-        return;
-    }
-    
-    // Добавляем серебро
-    playerData.silver += window.currentRewards.silver;
-    
-    // Если это последний уровень с NFT, запускаем процесс минтинга
-    if (level.id === 10 && window.currentRewards.special === "NFT_Scroll") {
-        // Проверяем, доступна ли функция mintNFTScroll
-        if (typeof mintNFTScroll === 'function') {
-            mintNFTScroll().then(success => {
-                if (success) {
-                    // Разблокируем раздел "Приключения"
-                    const adventureOption = document.getElementById('adventure-option');
-                    if (adventureOption) {
-                        adventureOption.classList.remove('locked');
-                        
-                        // Удаляем оверлей блокировки, если он существует
-                        const lockOverlay = adventureOption.querySelector('.lock-overlay');
-                        if (lockOverlay) {
-                            lockOverlay.remove();
-                        }
-                    }
-                }
-            }).catch(error => {
-                console.error("Error minting NFT:", error);
-                showGameMessage("Failed to mint NFT. You can try again later.", "warning");
-            });
-        } else {
-            console.error("mintNFTScroll function not available");
-            showGameMessage("NFT minting is currently not available", "warning");
-        }
-    }
-    
-    // Добавляем уровень в список пройденных, если его там еще нет
-    if (!playerData.completedLevels.includes(level.id)) {
-        playerData.completedLevels.push(level.id);
-    }
-    
-    // Сохраняем данные игрока
-    savePlayerData();
-    
-    // Обновляем информацию в интерфейсе
-    if (typeof updateUserInfo === 'function') {
-        updateUserInfo();
-    }
-    
-    // Закрываем оверлей
-    const levelResult = document.getElementById('level-result');
-    if (levelResult) {
-        levelResult.classList.remove('active');
-        const content = levelResult.querySelector('.overlay-content');
-        if (content) {
-            content.classList.remove('active');
-        }
-    }
-    
-    // Закрываем оверлей наград, если он открыт
-    const rewardsOverlay = document.getElementById('rewards-overlay');
-    if (rewardsOverlay) {
-        rewardsOverlay.style.display = 'none';
-    }
-    
-    // Возвращаемся к экрану кампании
-    showScreen('campaign-container');
-    
-    showGameMessage("Rewards claimed successfully!", "success");
+    // Перенаправляем на новую функцию
+    handleClaimRewards();
 }
 
 // Функция для возврата из игры в меню уровня
@@ -698,3 +563,120 @@ document.addEventListener('screenChanged', function(e) {
         setTimeout(addAlternateLoreButton, 100);
     }
 });
+
+// Функция для показа экрана поражения
+function showDefeatScreen() {
+    // Находим или создаем оверлей для результата
+    let overlay = document.getElementById('level-result');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'level-result';
+        overlay.className = 'overlay';
+        
+        const content = document.createElement('div');
+        content.className = 'overlay-content';
+        overlay.appendChild(content);
+        
+        document.body.appendChild(overlay);
+    }
+    
+    const content = overlay.querySelector('.overlay-content');
+    
+    if (!content) {
+        console.error("Overlay content element not found");
+        return;
+    }
+    
+    // Очищаем содержимое
+    content.innerHTML = `
+        <h2 id="result-title" class="defeat-animation">Defeat</h2>
+        <p id="result-message">You failed to complete the level. Try again!</p>
+        <button id="return-to-levels-btn">Return to Levels</button>
+    `;
+    
+    // Добавляем обработчик кнопки возврата
+    content.querySelector('#return-to-levels-btn').onclick = function() {
+        overlay.classList.remove('active');
+        content.classList.remove('active');
+        showScreen('campaign-container');
+    };
+    
+    // Показываем оверлей
+    overlay.classList.add('active');
+    content.classList.add('active');
+    
+    // Сбрасываем данные о наградах
+    window.currentRewards = null;
+}
+
+// Новая функция для обработки клейма наград
+function handleClaimRewards() {
+    console.log("Handling claim rewards...");
+    
+    if (!window.currentRewards) {
+        showGameMessage("No rewards to claim", "warning");
+        return;
+    }
+    
+    // Получаем данные награды
+    const rewards = window.currentRewards;
+    const levelId = rewards.levelId;
+    
+    // Добавляем серебро
+    playerData.silver += rewards.silver;
+    
+    // Если это последний уровень с NFT, запускаем процесс минтинга
+    if (levelId === 10 && rewards.special === "NFT_Scroll") {
+        if (typeof mintNFTScroll === 'function') {
+            mintNFTScroll().then(success => {
+                if (success) {
+                    // Разблокируем раздел "Приключения"
+                    const adventureOption = document.getElementById('adventure-option');
+                    if (adventureOption) {
+                        adventureOption.classList.remove('locked');
+                        
+                        // Удаляем оверлей блокировки, если он существует
+                        const lockOverlay = adventureOption.querySelector('.lock-overlay');
+                        if (lockOverlay) {
+                            lockOverlay.remove();
+                        }
+                    }
+                }
+            }).catch(error => {
+                console.error("Error minting NFT:", error);
+                showGameMessage("Failed to mint NFT. You can try again later.", "warning");
+            });
+        } else {
+            console.warn("mintNFTScroll function not available");
+            showGameMessage("NFT minting is currently not available", "warning");
+        }
+    }
+    
+    // Добавляем уровень в список пройденных, если его там еще нет
+    if (!playerData.completedLevels.includes(levelId)) {
+        playerData.completedLevels.push(levelId);
+    }
+    
+    // Сохраняем данные игрока
+    savePlayerData();
+    
+    // Обновляем информацию в интерфейсе
+    updateUserInfo();
+    
+    // Скрываем оверлей наград
+    const rewardsOverlay = document.getElementById('rewards-overlay');
+    if (rewardsOverlay) {
+        rewardsOverlay.style.display = 'none';
+    }
+    
+    // Возвращаемся к экрану кампании
+    showScreen('campaign-container');
+    
+    // Обновляем список уровней, чтобы отобразить прогресс
+    updateLevelsList();
+    
+    showGameMessage("Rewards claimed successfully!", "success");
+}
+
+// Делаем функцию обработки наград глобально доступной
+window.handleClaimRewards = handleClaimRewards;
