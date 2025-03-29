@@ -124,80 +124,6 @@ function createFallingAnimation(container, imgSrc, count = 10, duration = 2000) 
     }
 }
 
-// Функция для создания эффекта "шторки" для элемента
-function curtainEffect(element, direction = 'right', duration = 500) {
-    if (!element) return;
-    
-    // Создаем обертку
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'relative';
-    wrapper.style.overflow = 'hidden';
-    
-    // Перемещаем элемент внутрь обертки
-    element.parentNode.insertBefore(wrapper, element);
-    wrapper.appendChild(element);
-    
-    // Создаем шторку
-    const curtain = document.createElement('div');
-    curtain.style.position = 'absolute';
-    curtain.style.top = '0';
-    curtain.style.height = '100%';
-    curtain.style.width = '100%';
-    curtain.style.backgroundColor = '#4a3a2a';
-    curtain.style.zIndex = '1';
-    
-    // Устанавливаем начальную позицию шторки
-    if (direction === 'right') {
-        curtain.style.left = '-100%';
-    } else {
-        curtain.style.left = '100%';
-    }
-    
-    // Добавляем шторку в обертку
-    wrapper.appendChild(curtain);
-    
-    // Запускаем анимацию
-    setTimeout(() => {
-        curtain.style.transition = `left ${duration}ms ease-in-out`;
-        curtain.style.left = '0%';
-        
-        // Убираем шторку после окончания анимации
-        setTimeout(() => {
-            curtain.style.transition = `left ${duration}ms ease-in-out`;
-            
-            if (direction === 'right') {
-                curtain.style.left = '100%';
-            } else {
-                curtain.style.left = '-100%';
-            }
-            
-            // Удаляем шторку после анимации
-            setTimeout(() => {
-                // Перемещаем элемент обратно в родительский контейнер
-                wrapper.parentNode.insertBefore(element, wrapper);
-                wrapper.remove();
-            }, duration + 100);
-        }, duration + 100);
-    }, 100);
-}
-
-// Функция для создания эффекта мерцания
-function blinkEffect(element, count = 3, duration = 300) {
-    if (!element) return;
-    
-    let counter = 0;
-    
-    const intervalId = setInterval(() => {
-        element.style.opacity = element.style.opacity === '0' ? '1' : '0';
-        counter++;
-        
-        if (counter >= count * 2) {
-            clearInterval(intervalId);
-            element.style.opacity = '1';
-        }
-    }, duration / 2);
-}
-
 // Функция для создания эффекта пульсации
 function pulseEffect(element, scale = 1.2, duration = 1000) {
     if (!element) return;
@@ -248,54 +174,6 @@ function getDeviceType() {
     return 'desktop';
 }
 
-// Функция для создания пульсирующего текста
-function createPulsingText(element, text, duration = 2000) {
-    if (!element) return;
-    
-    // Очищаем содержимое
-    element.innerHTML = '';
-    
-    // Создаем обертку
-    const wrapper = document.createElement('div');
-    wrapper.className = 'pulsing-text-wrapper';
-    wrapper.style.display = 'inline-block';
-    
-    // Добавляем каждый символ с анимацией
-    for (let i = 0; i < text.length; i++) {
-        const charElement = document.createElement('span');
-        charElement.textContent = text[i];
-        charElement.style.display = 'inline-block';
-        charElement.style.animation = `pulse ${duration / 1000}s ease-in-out infinite`;
-        charElement.style.animationDelay = `${i * (duration / text.length) / 1000}s`;
-        
-        wrapper.appendChild(charElement);
-    }
-    
-    // Добавляем в элемент
-    element.appendChild(wrapper);
-}
-
-// Функция для создания эффекта печатающегося текста
-function typeWriter(element, text, speed = 50) {
-    if (!element) return;
-    
-    // Очищаем содержимое
-    element.textContent = '';
-    
-    return new Promise(resolve => {
-        let i = 0;
-        const timer = setInterval(() => {
-            if (i < text.length) {
-                element.textContent += text.charAt(i);
-                i++;
-            } else {
-                clearInterval(timer);
-                resolve();
-            }
-        }, speed);
-    });
-}
-
 // Экспортируем все функции
 window.utils = {
     animateElement,
@@ -307,15 +185,11 @@ window.utils = {
     isInViewport,
     delay,
     createFallingAnimation,
-    curtainEffect,
-    blinkEffect,
     pulseEffect,
     generateUID,
     isLocalStorageAvailable,
     getURLParameter,
     getDeviceType,
-    createPulsingText,
-    typeWriter
 };
 
 function handleImageError(img, fallbackSrc) {

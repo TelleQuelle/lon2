@@ -1732,107 +1732,6 @@ function resetShop() {
     }
 }
 
-// Функция для включения тестового режима
-function enableTestMode() {
-    // Устанавливаем тестовый режим
-    localStorage.setItem('testMode', 'true');
-    
-    // Показываем сообщение
-    showGameMessage("Test mode enabled. The page will reload...", "success");
-    
-    // Перезагружаем страницу через 2 секунды
-    setTimeout(() => {
-        location.reload();
-    }, 2000);
-}
-
-// Функция для генерации тестовых данных
-function generateTestData() {
-    // Запрашиваем подтверждение
-    if (!confirm("This will generate test data in your database. Continue?")) {
-        return;
-    }
-    
-    // Генерируем тестовых игроков
-    const players = [];
-    
-    for (let i = 1; i <= 10; i++) {
-        const player = {
-            wallet: `test_wallet_${i}`,
-            name: `Test Player ${i}`,
-            silver: Math.floor(Math.random() * 5000) + 500,
-            completedLevels: [],
-            inventory: {
-                cards: [],
-                dice: []
-            },
-            lastLogin: new Date().toISOString(),
-            gameHistory: []
-        };
-        
-        // Случайное количество пройденных уровней
-        const completedLevelsCount = Math.floor(Math.random() * 10) + 1;
-        for (let j = 1; j <= completedLevelsCount; j++) {
-            player.completedLevels.push(j);
-        }
-        
-        // Случайное количество игр
-        const gameCount = Math.floor(Math.random() * 20) + 5;
-        for (let j = 0; j < gameCount; j++) {
-            player.gameHistory.push({
-                date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                level: Math.floor(Math.random() * 10) + 1,
-                score: Math.floor(Math.random() * 3000) + 500,
-                result: Math.random() > 0.3 ? 'win' : 'lose'
-            });
-        }
-        
-        // Генерируем случайные предметы в инвентаре
-        const cardCount = Math.floor(Math.random() * 5) + 1;
-        for (let j = 0; j < cardCount; j++) {
-            player.inventory.cards.push({
-                id: `test_card_${j}`,
-                name: `Test Card ${j}`,
-                type: Math.random() > 0.5 ? 'card-skin' : 'special-card',
-                rarity: ['Common', 'Rare', 'Epic'][Math.floor(Math.random() * 3)]
-            });
-        }
-        
-        const diceCount = Math.floor(Math.random() * 3) + 1;
-        for (let j = 0; j < diceCount; j++) {
-            player.inventory.dice.push({
-                id: `test_dice_${j}`,
-                name: `Test Dice ${j}`,
-                type: Math.random() > 0.5 ? 'dice-skin' : 'special-dice',
-                rarity: ['Common', 'Rare', 'Epic'][Math.floor(Math.random() * 3)]
-            });
-        }
-        
-        // Добавляем игрока
-        players.push(player);
-    }
-    
-    // Сохраняем игроков в базу данных
-    const promises = players.map(player => 
-        gameDB.registerPlayer(player.wallet, player.name, player)
-    );
-    
-    // Ждем завершения всех операций
-    Promise.all(promises).then(() => {
-        // Обновляем статистику
-        return gameDB.updatePlayerStats();
-    }).then(() => {
-        // Обновляем интерфейс
-        refreshGameStats();
-        
-        // Показываем сообщение
-        showGameMessage("Test data generated successfully", "success");
-    }).catch(error => {
-        console.error("Error generating test data:", error);
-        showGameMessage("Error generating test data: " + error.message, "warning");
-    });
-}
-
 // Функция для очистки кэша
 function clearCache() {
     // Запрашиваем подтверждение
@@ -2050,30 +1949,6 @@ function updateItemPreview(item) {
     
     // Добавляем стили для предпросмотра
     addPreviewStyles();
-}
-
-// Функция для получения описания эффекта
-function getEffectDescription(effect, value) {
-    switch (effect) {
-        case 'pointsMultiplier':
-            return `Gives ${value}x points multiplier when used in a combination`;
-        case 'wildcard':
-            return 'Can be used with any die combination';
-        case 'extraTurn':
-            return 'Gives an extra turn when successfully used in a combination';
-        case 'goldMultiplier':
-            return 'Adds 1.25x multiplier to silver rewards for the level';
-        case 'weightedLow':
-            return 'Higher chance of rolling smaller numbers (1-3)';
-        case 'weightedHigh':
-            return 'Higher chance of rolling larger numbers (4-6)';
-        case 'weightedEven':
-            return 'Higher chance of rolling even numbers (2, 4, 6)';
-        case 'weightedOdd':
-            return 'Higher chance of rolling odd numbers (1, 3, 5)';
-        default:
-            return effect;
-    }
 }
 
 // Функция добавления стилей для предпросмотра

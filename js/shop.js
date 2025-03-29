@@ -737,7 +737,3 @@ function displaySpecialDice(container, shopData) {
         container.appendChild(itemElement);
     });
 }
-
-function generateUID() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
