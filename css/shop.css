@@ -24,37 +24,92 @@
         linear-gradient(160deg, #28221c 0%, #201c16 100%);
 }
 
-.shop-container h2 {
+/* Центрирование заголовка магазина */
+.shop-container h2, 
+.shop-container > p {
+    text-align: center;
     font-size: 32px;
     margin-bottom: 5px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     letter-spacing: 1px;
 }
 
+.shop-container > p {
+    font-size: 18px;
+    margin-bottom: 25px;
+}
+
 /* Категории товаров */
 .category-header {
     margin: 30px 0 15px 0;
-    text-align: center;
     position: relative;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
 }
 
+/* Стили для категории карт (центрированная) */
+#card-skins-items .category-header,
+#special-cards-items .category-header {
+    text-align: center;
+}
+
+/* Стили для категории кубиков (выровнены по левому краю) */
+#dice-skins-items .category-header,
+#special-dice-items .category-header {
+    text-align: left;
+    padding-left: 10px;
+    margin-left: 0;
+    max-width: 250px;
+}
+
+/* Подчеркивающие линии для всех заголовков - стилизованное средневековое подчеркивание */
 .category-header:after {
     content: "";
     position: absolute;
     bottom: 0;
+    left: 0;
+    width: 180px;
+    height: 3px;
+    background: linear-gradient(to right, #b89d6e, transparent);
+    box-shadow: 0 0 8px 1px rgba(184, 157, 110, 0.5);
+}
+
+/* Добавляем декоративные элементы к подчеркиванию */
+.category-header:before {
+    content: "◆";
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    font-size: 14px;
+    color: #b89d6e;
+    text-shadow: 0 0 5px rgba(184, 157, 110, 0.7);
+}
+
+/* Дополнительное декоративное украшение для заголовков */
+#card-skins-items .category-header h3:before,
+#special-cards-items .category-header h3:before,
+#dice-skins-items .category-header h3:before,
+#special-dice-items .category-header h3:before {
+    content: "❧";
+    font-size: 18px;
+    margin-right: 10px;
+    color: #b89d6e;
+    vertical-align: middle;
+}
+
+/* Центрирование линий для центрированных заголовков */
+#card-skins-items .category-header:after,
+#special-cards-items .category-header:after {
     left: 50%;
     transform: translateX(-50%);
-    width: 150px;
-    height: 2px;
     background: linear-gradient(to right, transparent, #b89d6e, transparent);
 }
 
 .category-header h3 {
     font-size: 24px;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: #b89d6e;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 0 10px rgba(184, 157, 110, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px;
 }
 
 .category-header p {
@@ -65,7 +120,7 @@
 }
 
 /* Группы скинов и карт */
-.skin-group, .special-card-group {
+.skin-group, .special-card-group, .card-skin-group {
     background-color: rgba(50, 40, 30, 0.3);
     border-radius: 8px;
     padding: 15px 10px;
@@ -304,35 +359,36 @@
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 25px;
-    width: 100%;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .group-title {
-    text-align: center;
+    text-align: left;
     margin-bottom: 10px;
+    margin-left: 15px;
     color: #b89d6e;
     font-size: 18px;
     position: relative;
     padding-bottom: 8px;
+    padding-left: 5px;
 }
 
 .group-title:after {
     content: "";
     position: absolute;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
+    left: 0;
+    width: 120px;
     height: 1px;
-    background: linear-gradient(to right, transparent, #b89d6e, transparent);
+    background: linear-gradient(to right, #b89d6e, transparent);
+    box-shadow: 0 0 5px rgba(184, 157, 110, 0.4);
 }
 
+/* Скрываем отображение эффекта в карточке специальных карт */
 .effect-description {
-    text-align: center;
-    font-style: italic;
-    margin: 5px 0 10px;
-    color: #d4c2a7;
-    font-size: 14px;
+    display: none;
 }
 
 .horizontal-cards-grid {
@@ -366,6 +422,41 @@
 /* Улучшенные стили для специальных карт */
 .special-cards-container .special-card-group:last-child hr {
     display: none;
+}
+
+/* Улучшенное визуальное разделение категорий */
+#card-skins-items, #dice-skins-items, 
+#special-cards-items, #special-dice-items {
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(184, 157, 110, 0.2);
+}
+
+/* Дополнительное пространство для категорий кубиков */
+#dice-skins-items, #special-dice-items {
+    margin-left: 0;
+    max-width: 95%;
+    padding-top: 15px;
+    clear: both;
+}
+
+/* Контейнеры для элементов */
+#dice-skins-items .shop-items, 
+#special-dice-items .shop-items {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: 50px;
+}
+
+#special-dice-items {
+    border-bottom: none;
+}
+
+/* Дополнительные улучшения для визуального деления */
+.shop-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
 /* Адаптивность для мобильных устройств */

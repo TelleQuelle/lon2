@@ -656,44 +656,9 @@ function displaySpecialCards(container, shopData) {
         groupHeader.className = 'group-title';
         cardGroupElement.appendChild(groupHeader);
         
-        // Добавляем описание эффекта, если есть
-        if (cardData.effect) {
-            const effectDesc = document.createElement('p');
-            effectDesc.className = 'effect-description';
-            
-            // Получаем описание эффекта
-            let effectText = '';
-            switch (cardData.effect) {
-                case 'pointsMultiplier':
-                    effectText = `Gives ${cardData.value}x points multiplier`;
-                    break;
-                case 'wildcard':
-                    effectText = 'Can be used with any die combination';
-                    break;
-                case 'extraTurn':
-                    effectText = 'Gives an extra turn when used';
-                    break;
-                case 'goldMultiplier':
-                    effectText = 'Increases silver rewards by 25%';
-                    break;
-                default:
-                    effectText = cardData.effect;
-            }
-            
-            effectDesc.textContent = `Effect: ${effectText}`;
-            effectDesc.style.fontSize = '14px';
-            effectDesc.style.marginBottom = '10px';
-            effectDesc.style.fontStyle = 'italic';
-            cardGroupElement.appendChild(effectDesc);
-        }
-        
         // Создаем горизонтальный контейнер для мастей
         const suitsContainer = document.createElement('div');
         suitsContainer.className = 'suits-container';
-        suitsContainer.style.display = 'flex';
-        suitsContainer.style.justifyContent = 'center';
-        suitsContainer.style.flexWrap = 'wrap';
-        suitsContainer.style.gap = '10px';
         cardGroupElement.appendChild(suitsContainer);
         
         // Для каждой масти создаем отдельный элемент
