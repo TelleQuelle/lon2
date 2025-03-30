@@ -39,10 +39,561 @@ function openInventory() {
     showScreen('inventory-container');
 }
 
+// Функция добавления стилей для инвентаря
+function addInventoryCardsStyles() {
+    // Проверяем, есть ли уже добавленные стили
+    if (document.getElementById('inventory-cards-styles')) {
+        document.getElementById('inventory-cards-styles').remove();
+    }
+    
+    const styleElement = document.createElement('style');
+    styleElement.id = 'inventory-cards-styles';
+    styleElement.textContent = `
+        /* Основной контейнер инвентаря - увеличиваем максимальную ширину */
+        #cards-inventory {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        /* Стили для представления по мастям */
+        .suit-section {
+            margin-bottom: 40px; /* Увеличиваем отступ между секциями */
+            background-color: rgba(50, 40, 30, 0.2);
+            border-radius: 8px;
+            padding: 20px 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            clear: both; /* Предотвращает перекрытие секций */
+        }
+        
+        .suit-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #b89d6e;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(184, 157, 110, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Центрируем заголовок */
+        }
+        
+        .suit-symbol {
+            font-size: 24px;
+            margin-right: 8px;
+            display: inline-block; /* Гарантирует хорошее отображение */
+        }
+        
+        /* Улучшенные стили для цветов мастей */
+        .red-suit {
+            color: #cc3333;
+            text-shadow: 0 0 3px rgba(204, 51, 51, 0.3);
+        }
+        
+        .black-suit {
+            color: #d4c2a7;
+            text-shadow: 0 0 3px rgba(212, 194, 167, 0.3);
+        }
+        
+        /* Сетка карт - увеличиваем отступы и улучшаем сетку */
+        .cards-suit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* Минимальная ширина увеличена */
+            gap: 18px; /* Увеличенный отступ между картами */
+            justify-content: center;
+        }
+        
+        /* Стили для представления по значениям */
+        .value-section {
+            margin-bottom: 40px; /* Увеличиваем отступ между секциями */
+            background-color: rgba(50, 40, 30, 0.2);
+            border-radius: 8px;
+            padding: 20px 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            clear: both;
+        }
+        
+        .value-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #b89d6e;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(184, 157, 110, 0.3);
+            text-align: center; /* Центрируем заголовок */
+        }
+        
+        /* Сетка карт по значениям - фиксированные колонки для 4 мастей */
+        .cards-value-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* Точно 4 колонки для 4 мастей */
+            gap: 18px; /* Увеличенный отступ */
+            justify-content: center;
+        }
+        
+        /* Карточный элемент - исправляем отображение */
+        .card-item {
+            background-color: #3a3a3a;
+            border: 1px solid #4a3a2a;
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            max-width: 100%; /* Ограничиваем максимальную ширину */
+            margin: 0 auto; /* Центрируем карту */
+            box-sizing: border-box; /* Включаем padding в ширину */
+        }
+        
+        .card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        
+        /* Стили для красной и черной масти */
+        .card-item.hearts, .card-item.diamonds {
+            border: 2px solid rgba(204, 51, 51, 0.7); /* Делаем рамку более заметной */
+        }
+        
+        .card-item.clubs, .card-item.spades {
+            border: 2px solid rgba(212, 194, 167, 0.7); /* Делаем рамку более заметной */
+        }
+        
+        /* Контейнер для изображения карты */
+        .card-image-container {
+            width: 100%;
+            position: relative;
+            margin-bottom: 8px; /* Увеличиваем отступ для лучшего разделения */
+        }
+        
+        .card-image {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 3/4; /* Поддержка пропорций */
+            object-fit: contain; /* Изменяем на contain для лучшего отображения */
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Улучшаем подпись карты */
+        .card-label {
+            font-size: 14px;
+            text-align: center;
+            margin-top: 8px;
+            font-weight: bold;
+            width: 100%; /* Полная ширина контейнера */
+            white-space: nowrap; /* Предотвращает перенос текста */
+            overflow: hidden; /* Скрывает лишний текст */
+            text-overflow: ellipsis; /* Добавляет многоточие при необходимости */
+        }
+        
+        /* Индикаторы для специальных карт */
+        .special-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            background-color: #b89d6e;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #2b2b2b;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+        }
+        
+        .skin-indicator {
+            background-color: #d4c2a7;
+        }
+        
+        .used-indicator {
+            background-color: #3a4a2a;
+            color: #ccff99;
+        }
+        
+        /* Стили для специальных карт */
+        .special-cards-container, .card-skins-container {
+            margin-bottom: 40px;
+        }
+        
+        .inventory-section-header {
+            font-size: 22px;
+            color: #b89d6e;
+            margin: 25px 0 20px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .inventory-section-header:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #b89d6e, transparent);
+        }
+        
+        /* Секция группы карт */
+        .card-group-section {
+            margin-bottom: 30px;
+            background-color: rgba(50, 40, 30, 0.2);
+            border-radius: 8px;
+            padding: 20px 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-group-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #b89d6e;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(184, 157, 110, 0.3);
+            text-align: center;
+        }
+        
+        .card-effect-description {
+            font-style: italic;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #d4c2a7;
+            padding: 8px;
+            background-color: rgba(184, 157, 110, 0.1);
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        /* Сетки для специальных карт и скинов */
+        .special-cards-grid, .card-skins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 18px;
+            padding: 8px;
+            justify-content: center;
+        }
+        
+        /* Разделитель между группами */
+        .group-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(184, 157, 110, 0.3), transparent);
+            margin: 25px 0;
+        }
+        
+        /* Стили для режима замены */
+        #replace-mode-notice {
+            background-color: #4a3a2a;
+            border: 1px solid #b89d6e;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #replace-mode-notice p {
+            margin: 0;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        #card-to-replace {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 5px;
+        }
+        
+        #card-to-replace span {
+            margin-left: 3px;
+        }
+        
+        /* Пустое сообщение */
+        .empty-message {
+            padding: 20px;
+            text-align: center;
+            font-style: italic;
+            color: #a89d8e;
+            background-color: rgba(50, 40, 30, 0.1);
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        /* Стили заголовка по мастям */
+        .suit-headers {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-bottom: 1px solid rgba(184, 157, 110, 0.3);
+            background-color: rgba(50, 40, 30, 0.3);
+            border-radius: 6px;
+        }
+        
+        .suit-title {
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        /* Стили для значений карт */
+        .value-index {
+            background-color: rgba(74, 58, 42, 0.5);
+            padding: 8px 12px;
+            margin-right: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        /* Стиль для карточки - отображение по значениям */
+        .value-card-label {
+            font-size: 12px;
+            text-align: center;
+            padding: 3px;
+            background-color: rgba(50, 40, 30, 0.3);
+            border-radius: 4px;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 767px) {
+            .cards-suit-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 15px;
+            }
+            
+            .cards-value-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+            
+            .special-cards-grid, .card-skins-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+            
+            .suit-title {
+                font-size: 16px;
+            }
+            
+            .card-label {
+                font-size: 12px;
+            }
+        }
+        
+        /* Дополнительная адаптивность для очень маленьких экранов */
+        @media (max-width: 480px) {
+            .cards-suit-grid {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+                gap: 12px;
+            }
+            
+            .cards-value-grid {
+                grid-template-columns: repeat(2, 1fr); /* На очень маленьких экранах - 2 колонки */
+                gap: 10px;
+            }
+            
+            .suit-title {
+                font-size: 14px;
+            }
+            
+            .card-label {
+                font-size: 11px;
+            }
+            
+            .card-image-container {
+                margin-bottom: 5px;
+            }
+        }
+    `;
+    
+    document.head.appendChild(styleElement);
+}
+
+// Функция для добавления базовых стилей инвентаря карт
+function addSimpleCardStyles() {
+    // Проверяем, существует ли уже элемент стилей
+    if (document.getElementById('simple-card-styles')) {
+        document.getElementById('simple-card-styles').remove();
+    }
+    
+    // Создаем элемент стиля
+    const style = document.createElement('style');
+    style.id = 'simple-card-styles';
+    
+    // Устанавливаем базовые стили
+    style.textContent = `
+        /* Базовые стили для контейнера карт */
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            justify-content: flex-start;
+        }
+        
+        /* Стили для секции масти */
+        .suit-section {
+            width: 100%;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: rgba(58, 58, 58, 0.3);
+            border-radius: 8px;
+        }
+        
+        /* Заголовок масти */
+        .suit-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #4a3a2a;
+            color: #b89d6e;
+        }
+        
+        /* Красный текст для червей и бубен */
+        .red-text {
+            color: #cc3333;
+        }
+        
+        /* Базовый стиль карты */
+        .card-box {
+            width: 90px;
+            height: 140px;
+            margin-bottom: 25px;
+            background-color: #333;
+            border-radius: 8px;
+            overflow: visible;
+            position: relative;
+        }
+        
+        /* Изображение карты */
+        .card-image {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 5px;
+            background-color: #444;
+        }
+        
+        /* Подпись карты */
+        .card-label {
+            position: absolute;
+            bottom: -22px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        /* Стили для разных представлений */
+        .value-view .cards-row {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            gap: 20px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .value-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #b89d6e;
+        }
+        
+        /* Индикатор для специальных карт */
+        .special-indicator {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 24px;
+            height: 24px;
+            background-color: #b89d6e;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        
+        /* Контейнер для специальных карт */
+        .special-section {
+            width: 100%;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: rgba(58, 58, 58, 0.3);
+            border-radius: 8px;
+        }
+        
+        .special-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #4a3a2a;
+            color: #b89d6e;
+        }
+        
+        /* Режим замены карты */
+        .replace-mode-box {
+            width: 100%;
+            padding: 15px;
+            background-color: #4a3a2a;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .replace-text {
+            font-size: 16px;
+            color: #d4c2a7;
+        }
+        
+        .cancel-btn {
+            padding: 8px 15px;
+            background-color: #5a3a3a;
+            color: #d4c2a7;
+            border: 1px solid #b89d6e;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    `;
+    
+    // Добавляем стили в head
+    document.head.appendChild(style);
+}
+
 // Функция инициализации инвентаря
 function initializeInventory() {
     // Обновляем HTML-структуру инвентаря
     updateInventoryHTML();
+    
+    // Добавляем стили для карт
+    addInventoryCardsStyles();
     
     // Проверяем и инициализируем данные игрока, если нужно
     initializePlayerInventoryData();
@@ -754,13 +1305,17 @@ function loadCardsByView(viewMode) {
     const cardsContainer = document.getElementById('cards-inventory');
     if (!cardsContainer) return;
     
-    // Очищаем контейнер
+    // Очищаем контейнер перед добавлением
     cardsContainer.innerHTML = '';
     
-    // Скрываем уведомление о режиме замены
+    // Сбрасываем класс контейнера
+    cardsContainer.className = '';
+    
+    // Скрываем уведомление о режиме замены (оно будет добавлено в loadSpecialCards если нужно)
     document.getElementById('replace-mode-notice').style.display = 'none';
-    inventoryState.cardReplaceMode = false;
-    inventoryState.currentCardToReplace = null;
+    
+    // Добавляем стили для карт
+    addSimpleCardStyles();
     
     if (viewMode === 'suit') {
         // Отображение по мастям
@@ -774,224 +1329,478 @@ function loadCardsByView(viewMode) {
     }
 }
 
-// Функция загрузки карт по мастям с горизонтальным отображением
+// Функция загрузки карт по мастям (простой вариант)
 function loadCardsBySuit(container) {
-    // Массивы для разных мастей
+    // Очищаем контейнер
+    container.innerHTML = '';
+    
+    // Массивы мастей и значений
     const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     
-    // Проходим по мастям
+    // Проходим по всем мастям
     suits.forEach(suit => {
-        // Создаем заголовок для масти
-        const suitHeader = document.createElement('h3');
-        suitHeader.className = `card-${suit}`;
-        suitHeader.textContent = getSuitDisplayName(suit);
-        container.appendChild(suitHeader);
+        // Создаем секцию для масти
+        const suitSection = document.createElement('div');
+        suitSection.className = 'suit-section';
         
-        // Создаем контейнер для карт этой масти
-        const suitContainer = document.createElement('div');
-        suitContainer.className = 'cards-grid';
-        container.appendChild(suitContainer);
+        // Создаем заголовок масти
+        const suitTitle = document.createElement('div');
+        suitTitle.className = 'suit-title';
+        if (suit === 'hearts' || suit === 'diamonds') {
+            suitTitle.classList.add('red-text');
+        }
         
-        // Загружаем карты для этой масти
+        // Задаем текст заголовка в зависимости от масти
+        switch (suit) {
+            case 'hearts':
+                suitTitle.innerHTML = '♥ Hearts';
+                break;
+            case 'diamonds':
+                suitTitle.innerHTML = '♦ Diamonds';
+                break;
+            case 'clubs':
+                suitTitle.innerHTML = '♣ Clubs';
+                break;
+            case 'spades':
+                suitTitle.innerHTML = '♠ Spades';
+                break;
+        }
+        
+        suitSection.appendChild(suitTitle);
+        
+        // Создаем контейнер для карт масти
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'cards-container';
+        
+        // Добавляем карты выбранной масти
         values.forEach(value => {
             const cardKey = `${value}_of_${suit}`;
             const card = playerData.deck[cardKey];
             
             if (card) {
-                const cardElement = createCardElement(card);
-                suitContainer.appendChild(cardElement);
+                // Создаем контейнер для карты
+                const cardBox = document.createElement('div');
+                cardBox.className = 'card-box';
+                cardBox.setAttribute('data-card-key', cardKey);
+                
+                // Создаем изображение карты
+                const cardImg = document.createElement('img');
+                cardImg.src = card.image;
+                cardImg.alt = card.name;
+                cardImg.className = 'card-image';
+                
+                // Создаем подпись карты
+                const cardLabel = document.createElement('div');
+                cardLabel.className = 'card-label';
+                if (suit === 'hearts' || suit === 'diamonds') {
+                    cardLabel.classList.add('red-text');
+                }
+                cardLabel.textContent = value;
+                
+                // Добавляем индикатор для специальных карт
+                if (card.type === 'special-card') {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'special-indicator';
+                    indicator.textContent = 'S';
+                    cardBox.appendChild(indicator);
+                } else if (card.type !== 'standard') {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'special-indicator';
+                    indicator.textContent = '★';
+                    indicator.style.backgroundColor = '#d4c2a7';
+                    cardBox.appendChild(indicator);
+                }
+                
+                // Добавляем изображение и подпись в контейнер карты
+                cardBox.appendChild(cardImg);
+                cardBox.appendChild(cardLabel);
+                
+                // Добавляем обработчик клика для выбора карты
+                cardBox.addEventListener('click', () => {
+                    if (!inventoryState.cardReplaceMode) {
+                        startCardReplaceMode(card);
+                    }
+                });
+                
+                // Добавляем карту в контейнер
+                cardsContainer.appendChild(cardBox);
             }
         });
+        
+        // Добавляем контейнер карт в секцию масти
+        suitSection.appendChild(cardsContainer);
+        
+        // Добавляем секцию масти в основной контейнер
+        container.appendChild(suitSection);
     });
 }
 
-// Функция загрузки карт по значениям с горизонтальным отображением
+// Функция загрузки карт по значениям (простой вариант)
 function loadCardsByValue(container) {
-    // Массивы для значений
+    // Очищаем контейнер
+    container.innerHTML = '';
+    
+    // Включаем представление по значениям
+    container.className = 'value-view';
+    
+    // Массивы значений и мастей
     const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+    const suitSymbols = {
+        'hearts': '♥',
+        'diamonds': '♦',
+        'clubs': '♣',
+        'spades': '♠'
+    };
     
-    // Проходим по значениям
+    // Проходим по всем значениям
     values.forEach(value => {
-        // Создаем заголовок для значения
-        const valueHeader = document.createElement('h3');
-        valueHeader.textContent = getValueDisplayName(value);
-        container.appendChild(valueHeader);
+        // Создаем секцию для значения
+        const valueSection = document.createElement('div');
+        valueSection.className = 'value-section';
         
-        // Создаем горизонтальный контейнер для карт этого значения
-        const valueContainer = document.createElement('div');
-        valueContainer.className = 'cards-grid horizontal-cards-grid';
-        valueContainer.style.display = 'flex';
-        valueContainer.style.flexWrap = 'wrap';
-        valueContainer.style.justifyContent = 'center';
-        valueContainer.style.gap = '10px';
-        container.appendChild(valueContainer);
+        // Создаем заголовок значения
+        const valueTitle = document.createElement('div');
+        valueTitle.className = 'value-title';
         
-        // Загружаем карты для этого значения
+        // Определяем текст заголовка
+        switch (value) {
+            case 'A':
+                valueTitle.textContent = 'Ace (A)';
+                break;
+            case 'J':
+                valueTitle.textContent = 'Jack (J)';
+                break;
+            case 'Q':
+                valueTitle.textContent = 'Queen (Q)';
+                break;
+            case 'K':
+                valueTitle.textContent = 'King (K)';
+                break;
+            default:
+                valueTitle.textContent = value;
+        }
+        
+        valueSection.appendChild(valueTitle);
+        
+        // Создаем ряд для карт этого значения
+        const cardsRow = document.createElement('div');
+        cardsRow.className = 'cards-row';
+        
+        // Добавляем карты каждой масти для этого значения
         suits.forEach(suit => {
             const cardKey = `${value}_of_${suit}`;
             const card = playerData.deck[cardKey];
             
             if (card) {
-                const cardElement = createCardElement(card);
-                valueContainer.appendChild(cardElement);
+                // Создаем контейнер для карты
+                const cardBox = document.createElement('div');
+                cardBox.className = 'card-box';
+                cardBox.setAttribute('data-card-key', cardKey);
+                
+                // Создаем изображение карты
+                const cardImg = document.createElement('img');
+                cardImg.src = card.image;
+                cardImg.alt = card.name;
+                cardImg.className = 'card-image';
+                
+                // Создаем подпись карты
+                const cardLabel = document.createElement('div');
+                cardLabel.className = 'card-label';
+                if (suit === 'hearts' || suit === 'diamonds') {
+                    cardLabel.classList.add('red-text');
+                }
+                cardLabel.textContent = suitSymbols[suit];
+                
+                // Добавляем индикатор для специальных карт
+                if (card.type === 'special-card') {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'special-indicator';
+                    indicator.textContent = 'S';
+                    cardBox.appendChild(indicator);
+                } else if (card.type !== 'standard') {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'special-indicator';
+                    indicator.textContent = '★';
+                    indicator.style.backgroundColor = '#d4c2a7';
+                    cardBox.appendChild(indicator);
+                }
+                
+                // Добавляем изображение и подпись в контейнер карты
+                cardBox.appendChild(cardImg);
+                cardBox.appendChild(cardLabel);
+                
+                // Добавляем обработчик клика для выбора карты
+                cardBox.addEventListener('click', () => {
+                    if (!inventoryState.cardReplaceMode) {
+                        startCardReplaceMode(card);
+                    }
+                });
+                
+                // Добавляем карту в ряд
+                cardsRow.appendChild(cardBox);
             }
         });
+        
+        // Добавляем ряд карт в секцию значения
+        valueSection.appendChild(cardsRow);
+        
+        // Добавляем секцию значения в основной контейнер
+        container.appendChild(valueSection);
     });
 }
 
-// Функция загрузки специальных карт с горизонтальным отображением мастей
+// Функция загрузки специальных карт (простой вариант)
 function loadSpecialCards(container) {
-    // Создаем заголовок для специальных карт
-    const specialCardsHeader = document.createElement('h3');
-    specialCardsHeader.textContent = 'Special Cards';
-    container.appendChild(specialCardsHeader);
+    // Очищаем контейнер
+    container.innerHTML = '';
     
-    // Фильтруем специальные карты из инвентаря
+    // Проверяем режим замены
+    if (inventoryState.cardReplaceMode) {
+        // Создаем уведомление о режиме замены
+        const replaceBox = document.createElement('div');
+        replaceBox.className = 'replace-mode-box';
+        
+        // Создаем текст уведомления
+        const replaceText = document.createElement('div');
+        replaceText.className = 'replace-text';
+        
+        // Получаем карту для замены
+        const card = inventoryState.currentCardToReplace;
+        const suitSymbol = card.suit === 'hearts' ? '♥' : 
+                          card.suit === 'diamonds' ? '♦' : 
+                          card.suit === 'clubs' ? '♣' : '♠';
+        
+        replaceText.innerHTML = `Select replacement for <strong>${card.value} ${suitSymbol}</strong>`;
+        
+        // Создаем кнопку отмены
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'cancel-btn';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', cancelCardReplace);
+        
+        // Добавляем элементы в уведомление
+        replaceBox.appendChild(replaceText);
+        replaceBox.appendChild(cancelBtn);
+        
+        // Добавляем уведомление в контейнер
+        container.appendChild(replaceBox);
+    }
+    
+    // Создаем секцию для специальных карт
+    const specialSection = document.createElement('div');
+    specialSection.className = 'special-section';
+    
+    // Создаем заголовок секции
+    const specialTitle = document.createElement('div');
+    specialTitle.className = 'special-title';
+    specialTitle.textContent = 'Special Cards';
+    specialSection.appendChild(specialTitle);
+    
+    // Фильтруем специальные карты
     const specialCards = playerData.inventory.cards.filter(card => 
         card.type === 'special-card'
     );
     
-    // Если нет специальных карт, показываем сообщение
+    // Если нет специальных карт, выводим сообщение
     if (specialCards.length === 0) {
-        const emptyMessage = document.createElement('p');
+        const emptyMessage = document.createElement('div');
         emptyMessage.textContent = 'You don\'t have any special cards yet. Purchase them in the shop!';
+        emptyMessage.style.padding = '10px';
         emptyMessage.style.textAlign = 'center';
-        emptyMessage.style.padding = '20px';
-        container.appendChild(emptyMessage);
+        specialSection.appendChild(emptyMessage);
     } else {
-        // Группируем специальные карты по их базовому ID (без учета масти)
-        const cardGroups = {};
+        // Создаем контейнер для специальных карт
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'cards-container';
         
+        // Добавляем специальные карты
         specialCards.forEach(card => {
-            // Извлекаем базовый ID (удаляем информацию о масти)
-            const baseId = card.parentId || card.id.split('_')[0];
+            // Проверяем, используется ли карта в колоде
+            const isUsed = Object.values(playerData.deck).some(deckCard => 
+                deckCard.id === card.id
+            );
             
-            if (!cardGroups[baseId]) {
-                cardGroups[baseId] = {
-                    name: card.name.split(' (')[0], // Убираем часть с мастью из названия
-                    effect: card.effect,
-                    cards: []
-                };
+            // Создаем контейнер для карты
+            const cardBox = document.createElement('div');
+            cardBox.className = 'card-box';
+            cardBox.setAttribute('data-id', card.id);
+            
+            // Если карта используется, делаем её неактивной
+            if (isUsed) {
+                cardBox.style.opacity = '0.7';
             }
             
-            // Добавляем карту в группу
-            cardGroups[baseId].cards.push(card);
+            // Создаем изображение карты
+            const cardImg = document.createElement('img');
+            cardImg.src = card.image;
+            cardImg.alt = card.name;
+            cardImg.className = 'card-image';
+            
+            // Создаем подпись карты
+            const cardLabel = document.createElement('div');
+            cardLabel.className = 'card-label';
+            if (card.suit === 'hearts' || card.suit === 'diamonds') {
+                cardLabel.classList.add('red-text');
+            }
+            
+            // Определяем текст подписи
+            if (card.suit) {
+                const suitSymbol = card.suit === 'hearts' ? '♥' : 
+                                 card.suit === 'diamonds' ? '♦' : 
+                                 card.suit === 'clubs' ? '♣' : '♠';
+                cardLabel.textContent = suitSymbol;
+            } else {
+                cardLabel.textContent = card.name.split(' ')[0];
+            }
+            
+            // Добавляем индикатор для используемых карт
+            if (isUsed) {
+                const indicator = document.createElement('div');
+                indicator.className = 'special-indicator';
+                indicator.textContent = '✓';
+                indicator.style.backgroundColor = '#3a4a2a';
+                cardBox.appendChild(indicator);
+            } else {
+                const indicator = document.createElement('div');
+                indicator.className = 'special-indicator';
+                indicator.textContent = 'S';
+                cardBox.appendChild(indicator);
+            }
+            
+            // Добавляем изображение и подпись в контейнер карты
+            cardBox.appendChild(cardImg);
+            cardBox.appendChild(cardLabel);
+            
+            // Добавляем обработчик клика
+            cardBox.addEventListener('click', () => {
+                if (inventoryState.cardReplaceMode && !isUsed) {
+                    replaceCard(card);
+                } else if (isUsed) {
+                    showGameMessage("This card is already in use", "info");
+                }
+            });
+            
+            // Добавляем карту в контейнер
+            cardsContainer.appendChild(cardBox);
         });
         
-        // Отображаем каждую группу специальных карт
-        Object.values(cardGroups).forEach(group => {
-            // Создаем заголовок для группы
-            const groupHeader = document.createElement('h4');
-            groupHeader.textContent = group.name;
-            groupHeader.style.marginTop = '15px';
-            container.appendChild(groupHeader);
-            
-            // Если у карты есть эффект, показываем его
-            if (group.effect) {
-                const effectText = document.createElement('p');
-                effectText.className = 'effect-description';
-                effectText.textContent = `Effect: ${getEffectDescription(group.effect)}`;
-                effectText.style.fontSize = '14px';
-                effectText.style.marginBottom = '10px';
-                effectText.style.fontStyle = 'italic';
-                container.appendChild(effectText);
-            }
-            
-            // Создаем горизонтальный контейнер для карт
-            const cardsContainer = document.createElement('div');
-            cardsContainer.className = 'cards-grid horizontal-cards-grid';
-            cardsContainer.style.display = 'flex';
-            cardsContainer.style.flexWrap = 'wrap';
-            cardsContainer.style.justifyContent = 'center';
-            cardsContainer.style.gap = '10px';
-            container.appendChild(cardsContainer);
-            
-            // Отображаем карты
-            group.cards.forEach(card => {
-                // Проверяем, используется ли карта в колоде
-                const isUsed = Object.values(playerData.deck).some(deckCard => 
-                    deckCard.id === card.id
-                );
-                
-                // Создаем элемент специальной карты
-                const cardElement = createSpecialCardElement(card, isUsed);
-                cardsContainer.appendChild(cardElement);
-            });
-        });
+        // Добавляем контейнер карт в секцию
+        specialSection.appendChild(cardsContainer);
     }
     
-    // Добавляем заголовок для скинов карт
-    const skinsHeader = document.createElement('h3');
-    skinsHeader.textContent = 'Card Skins';
-    skinsHeader.style.marginTop = '30px';
-    container.appendChild(skinsHeader);
+    // Добавляем секцию специальных карт в основной контейнер
+    container.appendChild(specialSection);
     
-    // Фильтруем скины карт из инвентаря
+    // Создаем секцию для скинов карт
+    const skinsSection = document.createElement('div');
+    skinsSection.className = 'special-section';
+    
+    // Создаем заголовок секции
+    const skinsTitle = document.createElement('div');
+    skinsTitle.className = 'special-title';
+    skinsTitle.textContent = 'Card Skins';
+    skinsSection.appendChild(skinsTitle);
+    
+    // Фильтруем скины карт
     const cardSkins = playerData.inventory.cards.filter(card => 
         card.type === 'card-skin'
     );
     
-    // Если нет скинов карт, показываем сообщение
+    // Если нет скинов карт, выводим сообщение
     if (cardSkins.length === 0) {
-        const emptyMessage = document.createElement('p');
+        const emptyMessage = document.createElement('div');
         emptyMessage.textContent = 'You don\'t have any card skins yet. Purchase them in the shop!';
+        emptyMessage.style.padding = '10px';
         emptyMessage.style.textAlign = 'center';
-        emptyMessage.style.padding = '20px';
-        container.appendChild(emptyMessage);
+        skinsSection.appendChild(emptyMessage);
     } else {
-        // Группируем скины карт по их базовому ID (без учета масти)
-        const skinGroups = {};
+        // Создаем контейнер для скинов карт
+        const cardsContainer = document.createElement('div');
+        cardsContainer.className = 'cards-container';
         
+        // Добавляем скины карт
         cardSkins.forEach(card => {
-            // Извлекаем базовый ID
-            const baseId = card.parentId || card.id.split('_')[0];
+            // Проверяем, используется ли скин в колоде
+            const isUsed = Object.values(playerData.deck).some(deckCard => 
+                deckCard.id === card.id
+            );
             
-            if (!skinGroups[baseId]) {
-                skinGroups[baseId] = {
-                    name: card.name.split(' (')[0], // Убираем часть с мастью из названия
-                    cards: []
-                };
+            // Создаем контейнер для карты
+            const cardBox = document.createElement('div');
+            cardBox.className = 'card-box';
+            cardBox.setAttribute('data-id', card.id);
+            
+            // Если скин используется, делаем его неактивным
+            if (isUsed) {
+                cardBox.style.opacity = '0.7';
             }
             
-            // Добавляем карту в группу
-            skinGroups[baseId].cards.push(card);
+            // Создаем изображение карты
+            const cardImg = document.createElement('img');
+            cardImg.src = card.image;
+            cardImg.alt = card.name;
+            cardImg.className = 'card-image';
+            
+            // Создаем подпись карты
+            const cardLabel = document.createElement('div');
+            cardLabel.className = 'card-label';
+            if (card.suit === 'hearts' || card.suit === 'diamonds') {
+                cardLabel.classList.add('red-text');
+            }
+            
+            // Определяем текст подписи
+            if (card.suit) {
+                const suitSymbol = card.suit === 'hearts' ? '♥' : 
+                                 card.suit === 'diamonds' ? '♦' : 
+                                 card.suit === 'clubs' ? '♣' : '♠';
+                cardLabel.textContent = suitSymbol;
+            } else {
+                cardLabel.textContent = card.name.split(' ')[0];
+            }
+            
+            // Добавляем индикатор для используемых скинов
+            if (isUsed) {
+                const indicator = document.createElement('div');
+                indicator.className = 'special-indicator';
+                indicator.textContent = '✓';
+                indicator.style.backgroundColor = '#3a4a2a';
+                cardBox.appendChild(indicator);
+            } else {
+                const indicator = document.createElement('div');
+                indicator.className = 'special-indicator';
+                indicator.textContent = '★';
+                indicator.style.backgroundColor = '#d4c2a7';
+                cardBox.appendChild(indicator);
+            }
+            
+            // Добавляем изображение и подпись в контейнер карты
+            cardBox.appendChild(cardImg);
+            cardBox.appendChild(cardLabel);
+            
+            // Добавляем обработчик клика
+            cardBox.addEventListener('click', () => {
+                if (inventoryState.cardReplaceMode && !isUsed) {
+                    replaceCard(card);
+                } else if (isUsed) {
+                    showGameMessage("This card is already in use", "info");
+                }
+            });
+            
+            // Добавляем карту в контейнер
+            cardsContainer.appendChild(cardBox);
         });
         
-        // Отображаем каждую группу скинов
-        Object.values(skinGroups).forEach(group => {
-            // Создаем заголовок для группы
-            const groupHeader = document.createElement('h4');
-            groupHeader.textContent = group.name;
-            groupHeader.style.marginTop = '15px';
-            container.appendChild(groupHeader);
-            
-            // Создаем горизонтальный контейнер для карт
-            const cardsContainer = document.createElement('div');
-            cardsContainer.className = 'cards-grid horizontal-cards-grid';
-            cardsContainer.style.display = 'flex';
-            cardsContainer.style.flexWrap = 'wrap';
-            cardsContainer.style.justifyContent = 'center';
-            cardsContainer.style.gap = '10px';
-            container.appendChild(cardsContainer);
-            
-            // Отображаем карты
-            group.cards.forEach(card => {
-                // Проверяем, используется ли скин в колоде
-                const isUsed = Object.values(playerData.deck).some(deckCard => 
-                    deckCard.id === card.id
-                );
-                
-                // Создаем элемент скина карты
-                const cardElement = createSpecialCardElement(card, isUsed);
-                cardsContainer.appendChild(cardElement);
-            });
-        });
+        // Добавляем контейнер карт в секцию
+        skinsSection.appendChild(cardsContainer);
     }
+    
+    // Добавляем секцию скинов карт в основной контейнер
+    container.appendChild(skinsSection);
 }
 
-// Функция создания элемента карты
+// Обновленный элемент карты
 function createCardElement(card) {
     // Создаем элемент
     const cardElement = document.createElement('div');
@@ -1000,27 +1809,40 @@ function createCardElement(card) {
     
     // Определяем класс для текста в зависимости от масти
     const textClass = card.suit === 'hearts' || card.suit === 'diamonds' ? 
-        'card-hearts' : 'card-clubs';
+        'red-suit' : 'black-suit';
     
-    // Создаем содержимое
-    cardElement.innerHTML = `
-        <img src="${card.image}" alt="${card.name}">
-        <div class="card-item-name ${textClass}">${getShortCardName(card)}</div>
-    `;
+    // Создаем контейнер для изображения
+    const cardImage = document.createElement('div');
+    cardImage.className = 'card-image-container';
     
-    // Добавляем индикатор для специальных карт
+    // Создаем изображение
+    const img = document.createElement('img');
+    img.src = card.image;
+    img.alt = card.name;
+    img.className = 'card-image';
+    cardImage.appendChild(img);
+    
+    // Добавляем индикатор для специальных карт и скинов
     if (card.type === 'special-card') {
         const specialIndicator = document.createElement('div');
         specialIndicator.className = 'special-indicator';
         specialIndicator.textContent = 'S';
-        cardElement.appendChild(specialIndicator);
+        cardImage.appendChild(specialIndicator);
     } else if (card.type !== 'standard') {
         const skinIndicator = document.createElement('div');
-        skinIndicator.className = 'special-indicator';
+        skinIndicator.className = 'special-indicator skin-indicator';
         skinIndicator.textContent = '★';
-        skinIndicator.style.backgroundColor = '#d4c2a7';
-        cardElement.appendChild(skinIndicator);
+        cardImage.appendChild(skinIndicator);
     }
+    
+    // Создаем подпись карты
+    const cardLabel = document.createElement('div');
+    cardLabel.className = `card-label ${textClass}`;
+    cardLabel.textContent = getShortCardName(card);
+    
+    // Добавляем элементы в карточку
+    cardElement.appendChild(cardImage);
+    cardElement.appendChild(cardLabel);
     
     // Добавляем обработчик клика
     cardElement.addEventListener('click', () => {
@@ -1042,35 +1864,60 @@ function createCardElement(card) {
     return cardElement;
 }
 
-// Функция создания элемента специальной карты
+// Обновленный элемент специальной карты
 function createSpecialCardElement(card, isUsed) {
     // Если у карты нет изображения, используем стандартное
     const cardImage = card.image || `assets/cards/default/A_of_spades.png`;
     
     // Создаем элемент
     const cardElement = document.createElement('div');
-    cardElement.className = 'card-item';
+    cardElement.className = 'card-item special-card';
     if (card.rarity) cardElement.classList.add(card.rarity);
     if (isUsed) cardElement.classList.add('used');
+    if (card.suit) cardElement.classList.add(card.suit);
     cardElement.setAttribute('data-id', card.id);
     
-    // Создаем содержимое
-    cardElement.innerHTML = `
-        <img src="${cardImage}" alt="${card.name}">
-        <div class="card-item-name">${card.name}</div>
-    `;
+    // Создаем контейнер для изображения
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'card-image-container';
+    
+    // Создаем изображение
+    const img = document.createElement('img');
+    img.src = cardImage;
+    img.alt = card.name;
+    img.className = 'card-image';
+    imageContainer.appendChild(img);
     
     // Если карта используется, добавляем индикатор
     if (isUsed) {
         const usedIndicator = document.createElement('div');
-        usedIndicator.className = 'special-indicator';
+        usedIndicator.className = 'special-indicator used-indicator';
         usedIndicator.textContent = '✓';
-        usedIndicator.style.backgroundColor = '#3a4a2a';
-        cardElement.appendChild(usedIndicator);
-        
-        // Добавляем затемнение
-        cardElement.style.opacity = '0.7';
+        imageContainer.appendChild(usedIndicator);
     }
+    
+    // Создаем подпись карты
+    const cardLabel = document.createElement('div');
+    cardLabel.className = 'card-label';
+    
+    // Определяем текст для подписи
+    let labelText = '';
+    if (card.suit) {
+        // Если у карты есть масть, показываем символ масти
+        const suitSymbol = getSuitSymbol(card.suit);
+        const textClass = card.suit === 'hearts' || card.suit === 'diamonds' ? 'red-suit' : 'black-suit';
+        cardLabel.classList.add(textClass);
+        labelText = suitSymbol;
+    } else {
+        // Иначе показываем короткое название
+        labelText = card.name.split(' ')[0];
+    }
+    
+    cardLabel.textContent = labelText;
+    
+    // Добавляем элементы в карточку
+    cardElement.appendChild(imageContainer);
+    cardElement.appendChild(cardLabel);
     
     // Добавляем обработчик клика
     cardElement.addEventListener('click', () => {
@@ -1095,6 +1942,17 @@ function createSpecialCardElement(card, isUsed) {
     return cardElement;
 }
 
+// Вспомогательная функция для получения символа масти
+function getSuitSymbol(suit) {
+    switch (suit) {
+        case 'hearts': return '♥';
+        case 'diamonds': return '♦';
+        case 'clubs': return '♣';
+        case 'spades': return '♠';
+        default: return '';
+    }
+}
+
 // Функция начала режима замены карты
 function startCardReplaceMode(card) {
     // Сохраняем текущую карту для замены
@@ -1106,7 +1964,11 @@ function startCardReplaceMode(card) {
     const cardToReplace = document.getElementById('card-to-replace');
     
     if (replaceNotice && cardToReplace) {
-        cardToReplace.textContent = getShortCardName(card);
+        const suitSymbol = card.suit === 'hearts' ? '♥' : 
+                         card.suit === 'diamonds' ? '♦' : 
+                         card.suit === 'clubs' ? '♣' : '♠';
+        
+        cardToReplace.textContent = `${card.value} ${suitSymbol}`;
         replaceNotice.style.display = 'flex';
     }
     
@@ -1327,3 +2189,8 @@ function getEffectDescription(effect, value) {
             return effect;
     }
 }
+
+// Инициализация стилей при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    addInventoryCardsStyles();
+});
